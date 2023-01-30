@@ -91,10 +91,9 @@ h1, h2, h3, h4, h5, h6, figure {
   padding: 28px 0;
 }
 .fh5co-nav #fh5co-logo {
-  font-size: 32px;
+  font-size: 30px;
   margin: 0;
   padding: 0;
-  text-transform: uppercase;
   font-weight: 700;
   font-family: "Inconsolata", Arial, sans-serif;
 }
