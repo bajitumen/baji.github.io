@@ -1,6 +1,0 @@
-tap "homebrew/bundle"
-tap "homebrew/core"
-brew "pkg-config"
-brew "gdal"
-brew "git-lfs"
-brew "pandoc"
