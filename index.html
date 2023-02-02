@@ -1,62 +1,94 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-	<head>
+<head>
+<style>
+* {
+  box-sizing: border-box;
+}
 
-	<title>Baji Tumendemberel</title>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-	<link href="https://fonts.googleapis.com/css?family=Inconsolata:400,700" rel="stylesheet">
-	
-	<!-- Animate.css -->
-	<link rel="stylesheet" href="css/animate.css">
-	<!-- Icomoon Icon Fonts-->
-	<link rel="stylesheet" href="css/icomoon.css">
-	<!-- Bootstrap  -->
-	<link rel="stylesheet" href="css/bootstrap.css">
-	<!-- Flexslider  -->
-	<link rel="stylesheet" href="css/flexslider.css">
+/* Style the header */
+.header {
+  grid-area: header;
+  background-color: #f1f1f1;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+}
 
-	<!-- Theme style  -->
-	<link rel="stylesheet" href="css/style.css">
+/* The grid container */
+.grid-container {
+  display: grid;
+  grid-template-areas: 
+    'header header header header header header' 
+    'left left middle middle right right' 
+    'footer footer footer footer footer footer';
+  /* grid-column-gap: 10px; - if you want gap between the columns */
+} 
 
-	<!-- Modernizr JS -->
-	<script src="js/modernizr-2.6.2.min.js"></script>
-	
+.left,
+.middle,
+.right {
+  padding: 10px;
+  height: 300px; /* Should be removed. Only for demonstration */
+}
 
-	</head>
-	<body>
-		
-	<div class="fh5co-loader"></div>
-	
-	<div id="page">
-	<nav class="fh5co-nav" role="navigation">
-		<div class="top-menu">
-			<div class="container">
-				<div class="row">
-					<div class="col-xs-2">
-						<div id="fh5co-logo"><a href="index.html">baji</a></div>
-					</div>
-					<div class="col-xs-10 text-right menu-1">
-						<ul>
-							<li><a href="portfolio.html">about</a></li>
-							<li class="has-dropdown">
-								<a href="blog.html">projects</a>
-								<ul class="dropdown">
-									<li><a href="#">solar access</a></li>
-									<li><a href="#"></a></li>
-									<li><a href="#">Branding</a></li>
-									<li><a href="#">API</a></li>
-								</ul>
-							</li>
-							<li><a href="about.html">cv</a></li>
-						</ul>
-					</div>
-				</div>
-				
-			</div>
-		</div>
-	</nav>
-	
-	</div>
-	</body>
+/* Style the left column */
+.left {
+  grid-area: left;
+}
+
+/* Style the middle column */
+.middle {
+  grid-area: middle;
+}
+
+/* Style the right column */
+.right {
+  grid-area: right;
+}
+
+/* Style the footer */
+.footer {
+  grid-area: footer;
+  background-color: #f1f1f1;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+@media (max-width: 600px) {
+  .grid-container  {
+    grid-template-areas: 
+      'header header header header header header' 
+      'left left left left left left' 
+      'middle middle middle middle middle middle' 
+      'right right right right right right' 
+      'footer footer footer footer footer footer';
+  }
+}
+</style>
+</head>
+<body>
+
+
+<div class="grid-container">
+  <div class="header">
+    <h2>Header</h2>
+  </div>
+  
+  <div class="left" style="background-color:#aaa;">Column</div>
+  <div class="middle" style="background-color:#bbb;">Column</div>  
+  <div class="right" style="background-color:#ccc;">Column</div>
+  
+  <div class="footer">
+  <p>Footer</p>
+  </div>
+</div>
+
+</body>
 </html>
 
