@@ -348,3 +348,24 @@
     width: 340px;
   }
 }
+
+.typewriter {
+  overflow: hidden; 
+  white-space: nowrap;
+}
+
+.typewriter-text {
+  display: inline-block;
+  animation: typing 3s steps(40, end), blink-caret .5s step-end infinite;
+  font-size: 40px;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: orange; }
+}
