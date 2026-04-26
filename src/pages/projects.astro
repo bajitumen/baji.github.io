@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import { projects } from '../data/projects';
+---
+
+<Base title="Projects — Baji Tumendemberel" current="projects">
+  <section class="mx-auto max-w-6xl px-6 py-24">
+    <p class="text-sm uppercase tracking-[0.2em] text-accent mb-6">Projects</p>
+    <h1 class="font-display text-5xl md:text-7xl leading-none mb-16">
+      Selected work.
+    </h1>
+
+    <ul class="space-y-24">
+      {projects.map((project, i) => (
+        <li class="grid md:grid-cols-2 gap-10 items-center">
+          <div class:list={['order-1', i % 2 === 1 && 'md:order-2']}>
+            {project.image && (
+              <img
+                src={project.image}
+                alt={project.title}
+                class="w-full aspect-video object-cover bg-neutral-900 border border-white/10"
+                loading="lazy"
+              />
+            )}
+            {project.video && (
+              <div class="aspect-video w-full bg-neutral-900 border border-white/10">
+                <iframe
+                  src={project.video}
+                  title={project.title}
+                  class="w-full h-full"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            )}
+            {!project.image && !project.video && (
+              <div class="aspect-video w-full bg-neutral-900 border border-white/10 flex items-center justify-center">
+                <span class="font-display text-6xl text-white/20">{String(i + 1).padStart(2, '0')}</span>
+              </div>
+            )}
+          </div>
+
+          <div class:list={['order-2', i % 2 === 1 && 'md:order-1']}>
+            <p class="text-sm text-white/40 mb-3">0{i + 1}</p>
+            <h2 class="font-display text-3xl md:text-4xl mb-4">{project.title}</h2>
+            <p class="text-white/70 leading-relaxed">{project.blurb}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

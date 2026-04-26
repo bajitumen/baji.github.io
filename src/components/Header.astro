@@ -1,0 +1,128 @@
+---
+const { current } = Astro.props as { current?: 'home' | 'about' | 'projects' };
+
+const links = [
+  { href: '/', label: 'home', key: 'home' },
+  { href: '/about', label: 'about', key: 'about' },
+  { href: 'https://drive.google.com/file/d/1OZffZhJkuyriNGMRzgE6S3RHyj8YwbLz/view?usp=sharing', label: 'cv', key: 'cv', external: true },
+  { href: '/projects', label: 'projects', key: 'projects' },
+];
+
+const socials = [
+  { href: 'https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/', label: 'LinkedIn', icon: '/images/3536569-93e7b4b9.png' },
+  { href: 'https://github.com/bajitumen', label: 'GitHub', icon: '/images/733609-7a4bbdb2.png' },
+  { href: 'https://twitter.com/baji_tumen', label: 'Twitter', icon: '/images/733635-e72ff36a.png' },
+];
+---
+
+<header class="sticky top-0 z-40 bg-black/80 backdrop-blur border-b border-white/10">
+  <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+    <a href="/" class="font-display text-2xl tracking-wide hover:text-accent transition-colors">
+      baji
+    </a>
+
+    <nav class="hidden md:flex items-center gap-8 text-sm">
+      {links.map(link => (
+        <a
+          href={link.href}
+          target={link.external ? '_blank' : undefined}
+          rel={link.external ? 'noopener noreferrer' : undefined}
+          class:list={[
+            'hover:text-accent transition-colors',
+            current === link.key ? 'text-accent' : 'text-white',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="hidden md:flex items-center gap-4">
+      {socials.map(s => (
+        <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} class="opacity-70 hover:opacity-100 transition-opacity">
+          <img src={s.icon} alt={s.label} class="h-5 w-5" />
+        </a>
+      ))}
+    </div>
+
+    <button id="menu-open" type="button" aria-label="Open menu" class="md:hidden p-2 -mr-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<div id="menu-overlay" class="fixed inset-0 z-50 hidden">
+  <div id="menu-backdrop" class="absolute inset-0 bg-black/70 opacity-0 transition-opacity duration-300"></div>
+  <aside
+    id="menu-panel"
+    class="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-neutral-950 border-l border-white/10 translate-x-full transition-transform duration-300 ease-out p-8 flex flex-col"
+  >
+    <button id="menu-close" type="button" aria-label="Close menu" class="self-end p-2 -mr-2">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+
+    <nav class="mt-8 flex flex-col gap-6 text-2xl font-display tracking-wide">
+      {links.map(link => (
+        <a
+          href={link.href}
+          target={link.external ? '_blank' : undefined}
+          rel={link.external ? 'noopener noreferrer' : undefined}
+          class:list={[
+            'hover:text-accent transition-colors',
+            current === link.key ? 'text-accent' : 'text-white',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="mt-auto flex items-center gap-5 pt-8 border-t border-white/10">
+      {socials.map(s => (
+        <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} class="opacity-70 hover:opacity-100 transition-opacity">
+          <img src={s.icon} alt={s.label} class="h-6 w-6" />
+        </a>
+      ))}
+    </div>
+  </aside>
+</div>
+
+<script>
+  const overlay = document.getElementById('menu-overlay');
+  const backdrop = document.getElementById('menu-backdrop');
+  const panel = document.getElementById('menu-panel');
+  const openBtn = document.getElementById('menu-open');
+  const closeBtn = document.getElementById('menu-close');
+
+  function openMenu() {
+    if (!overlay || !backdrop || !panel) return;
+    overlay.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      backdrop.classList.remove('opacity-0');
+      panel.classList.remove('translate-x-full');
+    });
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    if (!overlay || !backdrop || !panel) return;
+    backdrop.classList.add('opacity-0');
+    panel.classList.add('translate-x-full');
+    document.body.style.overflow = '';
+    setTimeout(() => overlay.classList.add('hidden'), 300);
+  }
+
+  openBtn?.addEventListener('click', openMenu);
+  closeBtn?.addEventListener('click', closeMenu);
+  backdrop?.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) closeMenu();
+  });
+</script>
