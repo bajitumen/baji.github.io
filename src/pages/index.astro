@@ -1,28 +1,104 @@
 ---
 import Base from '../layouts/Base.astro';
+import Employer from '../components/Employer.astro';
+
+const tabs = ['about', 'projects', 'contact'];
 ---
 
-<Base current="home">
-  <section class="mx-auto max-w-6xl px-6 py-24 md:py-40">
-    <p class="text-sm uppercase tracking-[0.2em] text-accent mb-6">Baji Tumendemberel</p>
-    <h1 class="font-display text-6xl md:text-8xl leading-none tracking-tight mb-8">
-      Data science<br />
-      <span class="text-white/50">at the intersection of</span><br />
-      social justice.
-    </h1>
-    <p class="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed mb-10">
-      Yale '22 graduate using statistical methods and computational tools to surface patterns
-      of inequity, support legal advocacy, and inform policy that affects underserved
-      communities. Selected work spans civil-rights litigation, public-health transparency,
-      and the politics of who gets counted.
-    </p>
-    <div class="flex flex-wrap gap-4">
-      <a href="/projects" class="inline-block px-6 py-3 bg-accent text-black font-medium hover:bg-white transition-colors">
-        View projects
-      </a>
-      <a href="/about" class="inline-block px-6 py-3 border border-white/20 hover:border-white transition-colors">
-        About me
-      </a>
+<Base>
+  <main class="min-h-screen flex items-center justify-center px-6 py-12">
+    <div class="w-full max-w-2xl text-base text-black leading-relaxed">
+      <p>
+        I’m Baji! I use emerging technologies to critically examine the world we live in. Currently, I am a member of technical staff at
+        <Employer name="Vals AI" href="https://www.vals.ai/home" />, building evals for social mobility tasks.
+      </p>
+
+      <div role="tablist" aria-label="Sections" class="mt-10 flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2 text-sm">
+        {tabs.map((tab, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${tab}`}
+            data-tab={tab}
+            aria-controls={`panel-${tab}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            class="pb-0.5 border-b-[1.5px] border-transparent text-black/55 hover:text-black transition-colors aria-selected:text-black aria-selected:border-black cursor-pointer"
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      <!-- All panels share one grid cell, so the block keeps the height of the
+           tallest panel and the page doesn't jump when switching tabs. -->
+      <div class="mt-8 grid">
+        <div id="panel-about" role="tabpanel" aria-labelledby="tab-about" class="col-start-1 row-start-1 space-y-6">
+          <p>
+            Previously, I led analytics engineering at <Employer name="Subject" href="https://subject.com" />, building the predictive layer of content delivery for students.
+          </p>
+          <p>
+            I was the lead data scientist on a <Employer name="New Yorker" href="https://www.newyorker.com/magazine/2023/12/18/felony-murder-laws" /> article on felony
+            murder convictions that won the 2024 <Employer name="Pulitzer Prize" href="https://www.pulitzer.org/winners/sarah-stillman-new-yorker" /> for
+            Explanatory Reporting.
+          </p>
+          <p>
+            Before that, I was a Research Programmer at <Employer name="USC" href="https://hpri.usc.edu/" /> on their
+            Homelessness Policy Research Institute. I was also a researcher at
+            <Employer name="RAND" href="https://www.rand.org/" /> and a data scientist for the <Employer name="UCLA" href="https://uclaprisondata.org/" /> Behind Bars Data Project.
+          </p>
+        </div>
+
+        <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="col-start-1 row-start-1 invisible">
+          <p class="text-black/55">Coming soon.</p>
+        </div>
+
+        <div id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" class="col-start-1 row-start-1 invisible">
+          <ul class="space-y-2">
+            <li>
+              <a href="https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-black/30 hover:decoration-black">LinkedIn</a>
+            </li>
+            <li>
+              <a href="https://github.com/bajitumen" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-black/30 hover:decoration-black">GitHub</a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-  </section>
+  </main>
 </Base>
+
+<script>
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+
+  function select(tab: HTMLButtonElement, updateHash = true) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')!)?.classList.toggle('invisible', !on);
+    }
+    if (updateHash) history.replaceState(null, '', `#${tab.dataset.tab}`);
+  }
+
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(tab);
+      const next =
+        e.key === 'ArrowRight' ? tabs[(i + 1) % tabs.length] :
+        e.key === 'ArrowLeft' ? tabs[(i - 1 + tabs.length) % tabs.length] :
+        e.key === 'Home' ? tabs[0] :
+        e.key === 'End' ? tabs[tabs.length - 1] :
+        null;
+      if (!next) return;
+      e.preventDefault();
+      select(next);
+      next.focus();
+    });
+  }
+
+  // Open the tab named in the URL, e.g. bajitumen.com/#contact
+  const fromHash = tabs.find((t) => t.dataset.tab === location.hash.slice(1));
+  if (fromHash) select(fromHash, false);
+</script>

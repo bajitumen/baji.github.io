@@ -1,0 +1,32 @@
+---
+const colors = {
+  'Vals AI': '#386B46',
+  Subject: '#0249D5',
+  RAND: '#751DDB',
+  'New Yorker': '#DB3334',
+  UCLA: '#2774AE',
+  USC: '#990000',
+  // Deep gold: brighter metallic golds are unreadable on white.
+  'Pulitzer Prize': '#8C6D1F',
+};
+
+interface Props {
+  name: keyof typeof colors;
+  href?: string;
+}
+
+const { name, href } = Astro.props;
+const style = { color: colors[name], whiteSpace: 'nowrap' };
+---
+
+{href ? (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={style}
+    class="underline underline-offset-4 decoration-1 hover:decoration-2"
+  >{name}</a>
+) : (
+  <span style={style}>{name}</span>
+)}

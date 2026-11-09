@@ -1,18 +1,14 @@
 ---
 import '../styles/global.css';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 
 interface Props {
   title?: string;
   description?: string;
-  current?: 'home' | 'about' | 'projects';
 }
 
 const {
   title = 'Baji Tumendemberel',
   description = 'Personal site of Baji Tumendemberel — data science and social justice.',
-  current,
 } = Astro.props;
 ---
 
@@ -26,13 +22,10 @@ const {
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400&display=swap" rel="stylesheet" />
+    <slot name="head" />
   </head>
-  <body class="min-h-screen flex flex-col">
-    <Header current={current} />
-    <main class="flex-1">
-      <slot />
-    </main>
-    <Footer />
+  <body>
+    <slot />
   </body>
 </html>
