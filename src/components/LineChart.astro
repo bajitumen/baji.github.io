@@ -64,13 +64,18 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
 </figure>
 
 <script>
-  import * as Plot from '@observablehq/plot';
+  import { plotFor } from '../scripts/plot';
   import type { Series } from './LineChart.astro';
   import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
 
   const LABEL_MIN_WIDTH = 520; // below this, end labels don't fit; the legend carries identity
 
-  function render(el: HTMLElement) {
+  async function render(el: HTMLElement) {
+    // Hidden (e.g. in an unselected tab): nothing to draw yet. The
+    // ResizeObserver below draws the chart once it becomes visible.
+    if (el.clientWidth === 0) return;
+    const Plot = await plotFor(el); // loads the chart library on first use
+    if (!Plot) return; // a newer draw of this chart has started
     const series: Series[] = JSON.parse(el.dataset.series!);
     const valueLabel = el.dataset.valueLabel!;
     const width = el.clientWidth;
@@ -91,7 +96,7 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
       height: 280,
       marginLeft: 48,
       marginRight: showEndLabels ? 110 : 12,
-      style: { fontFamily: 'inherit', fontSize: '12px', color: page.muted, overflow: 'visible' },
+      style: { fontFamily: 'inherit', fontSize: '11px', color: page.muted, overflow: 'visible' },
       x: { type: 'utc', label: null, ticks: width < LABEL_MIN_WIDTH ? 4 : 6, tickSize: 0 },
       y: { label: null, grid: true, nice: true, zero: true, tickSize: 0 },
       color: { domain: series.map((s) => s.name), range: series.map((s) => (dark ? s.colorDark ?? s.color : s.color)) },

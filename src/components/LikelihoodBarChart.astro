@@ -77,11 +77,16 @@ const compareColorDark = Astro.props.compareColorDark ?? compareColor;
 </figure>
 
 <script>
-  import * as Plot from '@observablehq/plot';
+  import { plotFor } from '../scripts/plot';
   import type { LikelihoodRow } from './LikelihoodBarChart.astro';
   import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
 
-  function render(el: HTMLElement) {
+  async function render(el: HTMLElement) {
+    // Hidden (e.g. in an unselected tab): nothing to draw yet. The
+    // ResizeObserver below draws the chart once it becomes visible.
+    if (el.clientWidth === 0) return;
+    const Plot = await plotFor(el); // loads the chart library on first use
+    if (!Plot) return; // a newer draw of this chart has started
     const rows: LikelihoodRow[] = JSON.parse(el.dataset.rows!);
     const base = el.dataset.baseLabel!;
     const compare = el.dataset.compareLabel!;
@@ -109,7 +114,7 @@ const compareColorDark = Astro.props.compareColorDark ?? compareColor;
       marginRight: 52, // room for the ratio label after each bar
       marginTop: 4,
       marginBottom: 4,
-      style: { fontFamily: 'inherit', fontSize: '12px', color: page.muted, overflow: 'visible' },
+      style: { fontFamily: 'inherit', fontSize: '11px', color: page.muted, overflow: 'visible' },
       y: { domain: order, label: null, padding: 0.3, tickSize: 0 },
       x: { domain: [0, 1], axis: null },
       color: { domain: ['base', 'compare'], range: colors },

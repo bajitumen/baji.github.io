@@ -21,20 +21,34 @@ const {
          colors: the visitor's saved choice, else their device setting. -->
     <script is:inline>
       (() => {
-        let theme;
-        try { theme = localStorage.getItem('theme'); } catch {}
-        if (theme !== 'light' && theme !== 'dark') {
-          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        document.documentElement.dataset.theme = theme;
+        const root = document.documentElement;
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        const saved = () => {
+          try {
+            const t = localStorage.getItem('theme');
+            return t === 'light' || t === 'dark' ? t : null;
+          } catch {
+            return null;
+          }
+        };
+        root.dataset.theme = saved() ?? (media.matches ? 'dark' : 'light');
+        // Until the visitor picks a theme with the toggle, follow their device
+        // setting live (e.g. when it switches to dark mode at sunset).
+        media.addEventListener('change', () => {
+          if (saved()) return;
+          root.classList.add('theme-switching');
+          root.dataset.theme = media.matches ? 'dark' : 'light';
+          requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
+          document.dispatchEvent(new CustomEvent('themechange'));
+        });
       })();
     </script>
-    <link rel="icon" type="image/png" href="/images/Vector.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500&display=swap" rel="stylesheet" />
     <slot name="head" />
   </head>
   <body>

@@ -27,7 +27,8 @@ export interface GradePoint {
   item: string; // e.g. "Unit 3 · Problem set (late)", "Midterm"
   topic?: string; // unit topic
   graded: number; // % of the course graded by this date (0–100)
-  actual?: number; // cumulative grade, % of course points (real data)
+  actual?: number; // cumulative grade, % of course points (real data); unrounded,
+  // so the chart can round once after converting to an average
   p10?: number; // pessimistic projection
   p50?: number; // realistic projection
   p90?: number; // optimistic projection
@@ -93,7 +94,7 @@ let graded = 0;
 for (const e of events) {
   cumulative += e.points;
   graded += e.weight;
-  points.push({ date: e.date, item: e.item, topic: e.topic, graded, actual: round(cumulative) });
+  points.push({ date: e.date, item: e.item, topic: e.topic, graded, actual: cumulative });
 }
 
 // Projections start from today's actual value so the dashed lines join the solid one.
@@ -133,14 +134,10 @@ for (const r of remaining) {
     item: r.item,
     topic: r.topic,
     graded: graded + weightSoFar,
-    p50: round(p50),
-    p90: round(p50 + Z * sd * UP),
-    p10: round(p50 - Z * sd * DOWN),
+    p50,
+    p90: p50 + Z * sd * UP,
+    p10: p50 - Z * sd * DOWN,
   });
-}
-
-function round(n: number) {
-  return Math.round(n * 10) / 10;
 }
 
 export const gradeProjection = points;

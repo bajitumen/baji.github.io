@@ -19,15 +19,23 @@
 </button>
 
 <script>
-  import { currentTheme } from '../scripts/theme';
+  import { currentTheme, onThemeChange } from '../scripts/theme';
 
   const button = document.getElementById('theme-toggle')!;
   const label = () => button.setAttribute('aria-label', currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
   label();
+  // Keep the label right when the theme changes without a click, e.g. when the
+  // device switches to dark mode (see Base.astro).
+  onThemeChange(label);
 
   button.addEventListener('click', () => {
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
+    const root = document.documentElement;
+    // Switch with animations off, then restore them once the new colors have
+    // painted (two frames), so nothing fades through in-between colors.
+    root.classList.add('theme-switching');
+    root.dataset.theme = next;
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
     try {
       localStorage.setItem('theme', next);
     } catch {}

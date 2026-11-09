@@ -3,14 +3,15 @@
 /* Theme: <html data-theme="light|dark">, set before first paint by Base.astro.
    Page colors are tokens, so Tailwind classes like bg-paper, text-ink and
    text-ink/60 follow the theme automatically. */
+/* The two modes are exact swaps: each one's text is the other's background. */
 :root {
   --paper: #F2F0EF; /* page background */
-  --ink: #000000; /* text */
+  --ink: #0D0F10; /* text */
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --paper: #1A1A19;
-  --ink: #F0EFEC;
+  --paper: #0D0F10;
+  --ink: #F2F0EF;
   color-scheme: dark;
 }
 
@@ -20,7 +21,22 @@
   --color-ink: var(--ink);
 }
 
+/* While the theme switches, turn off color animations (like the tabs' hover
+   fade) so everything changes at once instead of some elements fading
+   through in-between colors. ThemeToggle adds and removes this class. */
+.theme-switching,
+.theme-switching * {
+  transition: none !important;
+}
+
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Base size 15px (93.75% of the browser default). Text sizes, spacing and the
+   content width are all in rem, so they scale together from this one value,
+   and visitors' own browser font-size settings are still respected. */
+html {
+  font-size: 93.75%;
+}
 
 body {
   @apply bg-paper text-ink font-sans antialiased;

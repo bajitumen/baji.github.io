@@ -1,4 +1,5 @@
 ---
+import { execSync } from 'node:child_process';
 import Base from '../layouts/Base.astro';
 import Employer from '../components/Employer.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
@@ -33,17 +34,37 @@ for (const line of covidCsv.trim().split(/\r?\n/).slice(1)) {
 }
 
 const tabs = ['about', 'projects', 'contact'];
+
+// "Last updated": the month of the latest commit. GitHub rebuilds the site on
+// every push, so this tracks real content changes. Falls back to build time.
+let updated = new Date();
+try {
+  updated = new Date(execSync('git log -1 --format=%cI', { encoding: 'utf8' }).trim());
+} catch {}
+const updatedLabel = updated.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const updatedIso = updated.toISOString().slice(0, 7);
 ---
 
 <Base>
   <main class="min-h-screen flex items-start justify-center px-6 pt-24 md:pt-40 pb-24">
     <div class="w-full max-w-2xl text-base text-ink leading-relaxed">
-      <div class="mb-6 flex justify-end">
-        <ThemeToggle />
+      <!-- Header row: the site icon on the left, spanning the height of the two
+           right-hand rows (theme toggle and last-updated date). -->
+      <div class="mb-6 flex justify-between items-stretch">
+        <div class="self-stretch">
+          <!-- Placeholder icon: Phosphor "smiley", regular weight (MIT license, phosphoricons.com). -->
+          <svg class="h-full w-auto text-ink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <ThemeToggle />
+          <p class="text-sm text-ink/55">Last updated <time datetime={updatedIso}>{updatedLabel}</time></p>
+        </div>
       </div>
       <p>
         I’m Baji! I use emerging technologies to critically examine the world we live in. Currently, I am a member of technical staff at
-        <Employer name="Vals AI" href="https://www.vals.ai/home" />, building evals for social mobility tasks.
+        <Employer name="Vals AI" href="https://www.vals.ai/home" />, building evals for social mobility (SNAP, Medicare, etc.) and mental health.
       </p>
 
       <div role="tablist" aria-label="Sections" class="mt-10 flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2 text-sm">
@@ -63,10 +84,10 @@ const tabs = ['about', 'projects', 'contact'];
         ))}
       </div>
 
-      <!-- All panels share one grid cell, so the block keeps the height of the
-           tallest panel and the page doesn't jump when switching tabs. -->
-      <div class="mt-8 grid">
-        <div id="panel-about" role="tabpanel" aria-labelledby="tab-about" class="col-start-1 row-start-1 space-y-6">
+      <!-- Only the selected panel is shown; the others are hidden entirely, so
+           the page is only as tall as the tab you're on. -->
+      <div class="mt-8">
+        <div id="panel-about" role="tabpanel" aria-labelledby="tab-about" class="space-y-6">
           <p>
             Previously, I led analytics engineering at <Employer name="Subject" href="https://subject.com" />, building the predictive layer of content delivery for students.
           </p>
@@ -82,7 +103,7 @@ const tabs = ['about', 'projects', 'contact'];
           </p>
         </div>
 
-        <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="col-start-1 row-start-1 invisible space-y-16">
+        <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="hidden space-y-16">
           <ProjectionChart
             title="Simulated: projecting a student's final grade at Subject"
             subtitle="Course grade so far in a 10-unit physics course, 2025–26 (average of the work graded to date). Actual work through the January midterm; projected range for the rest of the year."
@@ -111,9 +132,9 @@ const tabs = ['about', 'projects', 'contact'];
             sourceHref="https://felonymurderreporting.org/states/"
             baseLabel="White"
             compareLabel="Black"
-            baseColor="#000000"
+            baseColor="#0D0F10"
             compareColor="#FF6752"
-            baseColorDark="#F0EFEC"
+            baseColorDark="#F2F0EF"
             rows={felonyMurderRows}
           />
           <LineChart
@@ -127,7 +148,7 @@ const tabs = ['about', 'projects', 'contact'];
           />
         </div>
 
-        <div id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" class="col-start-1 row-start-1 invisible">
+        <div id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" class="hidden">
           <ul class="space-y-2">
             <li>
               <a href="https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-ink/30 hover:decoration-ink">LinkedIn</a>
@@ -140,39 +161,48 @@ const tabs = ['about', 'projects', 'contact'];
       </div>
     </div>
   </main>
+
+  <!-- Tabs. Inline (not bundled) so it runs as soon as the markup above is
+       parsed, before any other script: tabs and #links work immediately, even
+       while the chart library is still downloading. -->
+  <script is:inline>
+    (() => {
+      const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+
+      function select(tab, updateHash = true) {
+        for (const t of tabs) {
+          const on = t === tab;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute('aria-controls'))?.classList.toggle('hidden', !on);
+        }
+        if (updateHash) history.replaceState(null, '', `#${tab.dataset.tab}`);
+      }
+
+      for (const tab of tabs) {
+        tab.addEventListener('click', () => select(tab));
+        tab.addEventListener('keydown', (e) => {
+          const i = tabs.indexOf(tab);
+          const next =
+            e.key === 'ArrowRight' ? tabs[(i + 1) % tabs.length] :
+            e.key === 'ArrowLeft' ? tabs[(i - 1 + tabs.length) % tabs.length] :
+            e.key === 'Home' ? tabs[0] :
+            e.key === 'End' ? tabs[tabs.length - 1] :
+            null;
+          if (!next) return;
+          e.preventDefault();
+          select(next);
+          next.focus();
+        });
+      }
+
+      // Open the tab named in the URL, e.g. bajitumen.com/#contact
+      const fromHash = () => tabs.find((t) => t.dataset.tab === location.hash.slice(1));
+      if (fromHash()) select(fromHash(), false);
+      // Also follow later changes, e.g. the back button or an in-page #link.
+      window.addEventListener('hashchange', () => {
+        if (fromHash()) select(fromHash(), false);
+      });
+    })();
+  </script>
 </Base>
-
-<script>
-  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-
-  function select(tab: HTMLButtonElement, updateHash = true) {
-    for (const t of tabs) {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')!)?.classList.toggle('invisible', !on);
-    }
-    if (updateHash) history.replaceState(null, '', `#${tab.dataset.tab}`);
-  }
-
-  for (const tab of tabs) {
-    tab.addEventListener('click', () => select(tab));
-    tab.addEventListener('keydown', (e) => {
-      const i = tabs.indexOf(tab);
-      const next =
-        e.key === 'ArrowRight' ? tabs[(i + 1) % tabs.length] :
-        e.key === 'ArrowLeft' ? tabs[(i - 1 + tabs.length) % tabs.length] :
-        e.key === 'Home' ? tabs[0] :
-        e.key === 'End' ? tabs[tabs.length - 1] :
-        null;
-      if (!next) return;
-      e.preventDefault();
-      select(next);
-      next.focus();
-    });
-  }
-
-  // Open the tab named in the URL, e.g. bajitumen.com/#contact
-  const fromHash = tabs.find((t) => t.dataset.tab === location.hash.slice(1));
-  if (fromHash) select(fromHash, false);
-</script>
