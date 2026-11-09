@@ -1,13 +1,46 @@
 ---
 import Base from '../layouts/Base.astro';
 import Employer from '../components/Employer.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import LineChart, { type Series } from '../components/LineChart.astro';
+import covidCsv from '../data/ucla-covid-cumulative-cases.csv?raw';
+import LikelihoodBarChart, { type LikelihoodRow } from '../components/LikelihoodBarChart.astro';
+import felonyMurderData from '../data/felony-murder-race-by-state.json';
+import ProjectionChart from '../components/ProjectionChart.astro';
+import { gradeProjection, todayDate } from '../data/simulated-grade-projection';
+
+// Cumulative confirmed COVID-19 cases among incarcerated people, from the
+// UCLA Law COVID Behind Bars Data Project's per-state time series files.
+// Colors are categorical slots 1–3 of the validated chart palette, with the
+// palette's own dark-mode steps.
+const covidSeries: Series[] = [
+  { name: 'All State Prisons, AR', label: 'Arkansas prisons', color: '#2a78d6', colorDark: '#3987e5', points: [] },
+  { name: 'Los Angeles Jails, CA', label: 'LA jails', color: '#eb6834', colorDark: '#d95926', points: [] },
+  { name: 'Bellamy Creek Correctional Facility, MI', label: 'Bellamy Creek', color: '#1baf7a', colorDark: '#199e70', points: [] },
+];
+// Felony murder: how many times more likely Black people are than white people
+// to be incarcerated for felony murder, as published on each state page of the
+// Felony Murder Reporting Project. Per-state caveats (data rating, measure,
+// exclusions) are kept in the JSON and left to the project's own state pages.
+const felonyMurderRows: LikelihoodRow[] = felonyMurderData.map((d) => ({ name: d.state, ratio: d.ratio }));
+
+for (const line of covidCsv.trim().split(/\r?\n/).slice(1)) {
+  const m = line.match(/^"?(.*?)"?,(\d{4}-\d{2}-\d{2}),(\d+)$/);
+  if (!m) throw new Error(`Unreadable row in ucla-covid-cumulative-cases.csv: ${line}`);
+  const target = covidSeries.find((s) => s.name === m[1]);
+  if (!target) throw new Error(`Unknown series in ucla-covid-cumulative-cases.csv: ${m[1]}`);
+  target.points.push({ date: m[2], value: Number(m[3]) });
+}
 
 const tabs = ['about', 'projects', 'contact'];
 ---
 
 <Base>
-  <main class="min-h-screen flex items-center justify-center px-6 py-12">
-    <div class="w-full max-w-2xl text-base text-black leading-relaxed">
+  <main class="min-h-screen flex items-start justify-center px-6 pt-24 md:pt-40 pb-24">
+    <div class="w-full max-w-2xl text-base text-ink leading-relaxed">
+      <div class="mb-6 flex justify-end">
+        <ThemeToggle />
+      </div>
       <p>
         I’m Baji! I use emerging technologies to critically examine the world we live in. Currently, I am a member of technical staff at
         <Employer name="Vals AI" href="https://www.vals.ai/home" />, building evals for social mobility tasks.
@@ -23,7 +56,7 @@ const tabs = ['about', 'projects', 'contact'];
             aria-controls={`panel-${tab}`}
             aria-selected={i === 0 ? 'true' : 'false'}
             tabindex={i === 0 ? 0 : -1}
-            class="pb-0.5 border-b-[1.5px] border-transparent text-black/55 hover:text-black transition-colors aria-selected:text-black aria-selected:border-black cursor-pointer"
+            class="pb-0.5 border-b-[1.5px] border-transparent text-ink/55 hover:text-ink transition-colors aria-selected:text-ink aria-selected:border-ink cursor-pointer"
           >
             {tab}
           </button>
@@ -43,23 +76,64 @@ const tabs = ['about', 'projects', 'contact'];
             Explanatory Reporting.
           </p>
           <p>
-            Before that, I was a Research Programmer at <Employer name="USC" href="https://hpri.usc.edu/" /> on their
-            Homelessness Policy Research Institute. I was also a researcher at
-            <Employer name="RAND" href="https://www.rand.org/" /> and a data scientist for the <Employer name="UCLA" href="https://uclaprisondata.org/" /> Behind Bars Data Project.
+            Before that, I was a research programmer at <Employer name="USC" href="https://hpri.usc.edu/" />'s
+            Homelessness Policy Research Institute, a researcher at
+            <Employer name="RAND" href="https://www.rand.org/" />, and a data scientist for the <Employer name="UCLA" href="https://uclaprisondata.org/" /> Behind Bars Data Project.
           </p>
         </div>
 
-        <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="col-start-1 row-start-1 invisible">
-          <p class="text-black/55">Coming soon.</p>
+        <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="col-start-1 row-start-1 invisible space-y-16">
+          <ProjectionChart
+            title="Simulated: projecting a student's final grade at Subject"
+            subtitle="Course grade so far in a 10-unit physics course, 2025–26 (average of the work graded to date). Actual work through the January midterm; projected range for the rest of the year."
+            notes={[
+              'Simulated data for illustration: not a real student or real model output.',
+              'Projections show the p90 (optimistic), p50 (realistic) and p10 (pessimistic) predictions of a quantile model, the approach behind Subject’s predictive student-success scores.',
+              'Each unit has a homework (1.5%), problem set (1.5%) and lab (3%); midterm 15%, final 25%.',
+            ]}
+            points={gradeProjection}
+            todayDate={todayDate}
+            colors={{ actual: '#2a78d6', optimistic: '#008300', pessimistic: '#e34948' }}
+            colorsDark={{ actual: '#3987e5', optimistic: '#008300', pessimistic: '#e66767' }}
+          />
+          <LikelihoodBarChart
+            title="Felony murder: how much more likely Black people are to be incarcerated than white people"
+            subtitle="Each bar splits the two groups' likelihood of incarceration for felony murder: white residents are 1 part, Black residents the number shown."
+            notes={[
+              {
+                before: 'For state-specific information, visit the ',
+                linkText: 'Felony Murder Reporting Project’s state pages',
+                href: 'https://felonymurderreporting.org/states/',
+                after: '.',
+              },
+            ]}
+            source="Felony Murder Reporting Project"
+            sourceHref="https://felonymurderreporting.org/states/"
+            baseLabel="White"
+            compareLabel="Black"
+            baseColor="#000000"
+            compareColor="#FF6752"
+            baseColorDark="#F0EFEC"
+            rows={felonyMurderRows}
+          />
+          <LineChart
+            title="COVID-19 cases among incarcerated people, 2020–2023"
+            subtitle="Cumulative confirmed cases among people held in each system or facility."
+            note="Data reflect what carceral agencies reported. Each line ends at its last available report."
+            source="UCLA Law COVID Behind Bars Data Project"
+            sourceHref="https://uclaprisondata.org/"
+            valueLabel="Cumulative cases"
+            series={covidSeries}
+          />
         </div>
 
         <div id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" class="col-start-1 row-start-1 invisible">
           <ul class="space-y-2">
             <li>
-              <a href="https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-black/30 hover:decoration-black">LinkedIn</a>
+              <a href="https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-ink/30 hover:decoration-ink">LinkedIn</a>
             </li>
             <li>
-              <a href="https://github.com/bajitumen" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-black/30 hover:decoration-black">GitHub</a>
+              <a href="https://github.com/bajitumen" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-ink/30 hover:decoration-ink">GitHub</a>
             </li>
           </ul>
         </div>

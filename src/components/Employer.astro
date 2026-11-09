@@ -1,13 +1,15 @@
 ---
+// Organization names in their brand colors. Each has a lighter dark-mode
+// version so it stays readable (at least 5:1) on the dark background.
 const colors = {
-  'Vals AI': '#386B46',
-  Subject: '#0249D5',
-  RAND: '#751DDB',
-  'New Yorker': '#DB3334',
-  UCLA: '#2774AE',
-  USC: '#990000',
-  // Deep gold: brighter metallic golds are unreadable on white.
-  'Pulitzer Prize': '#8C6D1F',
+  'Vals AI': { light: '#386B46', dark: '#6E9378' },
+  Subject: { light: '#0249D5', dark: '#5B89E4' },
+  RAND: { light: '#751DDB', dark: '#A76EE8' },
+  'New Yorker': { light: '#DB3334', dark: '#E35E5F' },
+  UCLA: { light: '#2774AE', dark: '#5290BE' },
+  USC: { light: '#990000', dark: '#C77373' },
+  // Deep gold: brighter metallic golds are unreadable on a light background.
+  'Pulitzer Prize': { light: '#8C6D1F', dark: '#A18747' },
 };
 
 interface Props {
@@ -16,7 +18,7 @@ interface Props {
 }
 
 const { name, href } = Astro.props;
-const style = { color: colors[name], whiteSpace: 'nowrap' };
+const style = { '--c-light': colors[name].light, '--c-dark': colors[name].dark, whiteSpace: 'nowrap' };
 ---
 
 {href ? (
@@ -25,8 +27,8 @@ const style = { color: colors[name], whiteSpace: 'nowrap' };
     target="_blank"
     rel="noopener noreferrer"
     style={style}
-    class="underline underline-offset-4 decoration-1 hover:decoration-2"
+    class="themed-text underline underline-offset-4 decoration-1 hover:decoration-2"
   >{name}</a>
 ) : (
-  <span style={style}>{name}</span>
+  <span style={style} class="themed-text">{name}</span>
 )}

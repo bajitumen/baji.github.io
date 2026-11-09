@@ -1,0 +1,130 @@
+[
+  {
+    "state": "Wisconsin",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 38.9536,
+    "sourceUrl": "https://felonymurderreporting.org/states/wi/",
+    "sourceSentence": "In Wisconsin, you are 38.9536 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "California",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 25.8455,
+    "sourceUrl": "https://felonymurderreporting.org/states/ca/",
+    "sourceSentence": "In California, you are 25.8455 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "New Jersey",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 25.0279,
+    "sourceUrl": "https://felonymurderreporting.org/states/nj/",
+    "sourceSentence": "In New Jersey, you are 25.0279 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Illinois",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 23.2357,
+    "sourceUrl": "https://felonymurderreporting.org/states/il/",
+    "sourceSentence": "In Illinois, you are 23.2357 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Connecticut",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 21.1792,
+    "sourceUrl": "https://felonymurderreporting.org/states/ct/",
+    "sourceSentence": "In Connecticut, you are 21.1792 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Colorado",
+    "rating": "Partial",
+    "measure": "convicted",
+    "ratio": 19.452,
+    "sourceUrl": "https://felonymurderreporting.org/states/co/",
+    "sourceSentence": "In Colorado, you are 19.452 times more likely to be convicted of felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "New York",
+    "rating": "Partial",
+    "measure": "incarcerated",
+    "ratio": 19.1112,
+    "sourceUrl": "https://felonymurderreporting.org/states/ny/",
+    "sourceSentence": "In New York, Black people are 19.1112 times more likely than White people to be incarcerated for felony murder, and Hispanic people are 6.0039 times more likely than white people to be incarcerated for felony murder."
+  },
+  {
+    "state": "Pennsylvania",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 17.1942,
+    "sourceUrl": "https://felonymurderreporting.org/states/pa/",
+    "sourceSentence": "In Pennsylvania, you are 17.1942 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Michigan",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 15.903,
+    "sourceUrl": "https://felonymurderreporting.org/states/mi/",
+    "sourceSentence": "In Michigan, you are 15.903 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Minnesota",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 14.5965,
+    "sourceUrl": "https://felonymurderreporting.org/states/mn/",
+    "sourceSentence": "In Minnesota, you are 14.5965 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Alabama",
+    "rating": "Partial",
+    "measure": "charged",
+    "ratio": 13.0775,
+    "sourceUrl": "https://felonymurderreporting.org/states/al/",
+    "sourceSentence": "In Alabama, you are 13.0775 times more likely to be charged with felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Washington",
+    "rating": "Partial",
+    "measure": "incarcerated",
+    "ratio": 12.9625,
+    "sourceUrl": "https://felonymurderreporting.org/states/wa/",
+    "sourceSentence": "In Washington, you are 12.9625 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Missouri",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 9.136,
+    "sourceUrl": "https://felonymurderreporting.org/states/mo/",
+    "sourceSentence": "In Missouri, you are 9.136 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Florida",
+    "rating": "Complete",
+    "measure": "incarcerated",
+    "ratio": 8.4221,
+    "sourceUrl": "https://felonymurderreporting.org/states/fl/",
+    "sourceSentence": "In Florida, you are 8.4221 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Mississippi",
+    "rating": "Partial",
+    "measure": "incarcerated",
+    "ratio": 6.6543,
+    "sourceUrl": "https://felonymurderreporting.org/states/ms/",
+    "sourceSentence": "In Mississippi, you are 6.6543 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  },
+  {
+    "state": "Virginia",
+    "rating": "Partial",
+    "measure": "incarcerated",
+    "ratio": 4.0477,
+    "sourceUrl": "https://felonymurderreporting.org/states/va/",
+    "sourceSentence": "In Virginia – excluding Alexandria and Fairfax counties where we do not yet have data – you are 4.0477 times more likely to be incarcerated for felony murder if you are Black than if you are white."
+  }
+]

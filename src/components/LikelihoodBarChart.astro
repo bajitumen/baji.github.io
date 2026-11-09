@@ -1,0 +1,155 @@
+---
+// One split bar per row: the baseline group is 1 part and the comparison
+// group is `ratio` parts, so the split point shows the disparity
+// (e.g. 17.19× puts the baseline at 1/18.19 ≈ 5.5% of the bar).
+// The ratio is labeled at the bar's end. A legend names the two groups.
+
+export interface LikelihoodRow {
+  name: string; // row label
+  ratio: number; // comparison group's likelihood relative to the baseline group
+}
+
+// A note is plain text, or text with one link in it.
+type Note = string | { before?: string; linkText: string; href: string; after?: string };
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  notes?: Note[];
+  source: string;
+  sourceHref?: string;
+  baseLabel: string; // e.g. "White"
+  compareLabel: string; // e.g. "Black"
+  baseColor: string; // light mode
+  compareColor: string;
+  baseColorDark?: string; // dark mode (defaults to the light-mode color)
+  compareColorDark?: string;
+  rows: LikelihoodRow[];
+}
+
+const { title, subtitle, notes = [], source, sourceHref, baseLabel, compareLabel, baseColor, compareColor, rows } = Astro.props;
+const baseColorDark = Astro.props.baseColorDark ?? baseColor;
+const compareColorDark = Astro.props.compareColorDark ?? compareColor;
+---
+
+<figure class="space-y-3">
+  <figcaption class="space-y-1">
+    <p class="font-medium">{title}</p>
+    {subtitle && <p class="text-sm text-ink/60">{subtitle}</p>}
+  </figcaption>
+
+  <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink/70" aria-hidden="true">
+    <li class="flex items-center gap-2">
+      <span class="themed-bg inline-block h-2.5 w-2.5 rounded-full" style={{ '--c-light': baseColor, '--c-dark': baseColorDark }}></span>{baseLabel}
+    </li>
+    <li class="flex items-center gap-2">
+      <span class="themed-bg inline-block h-2.5 w-2.5 rounded-full" style={{ '--c-light': compareColor, '--c-dark': compareColorDark }}></span>{compareLabel}
+    </li>
+  </ul>
+
+  <div
+    class="likelihood-chart w-full"
+    data-rows={JSON.stringify(rows)}
+    data-base-label={baseLabel}
+    data-compare-label={compareLabel}
+    data-colors={JSON.stringify({ light: [baseColor, compareColor], dark: [baseColorDark, compareColorDark] })}
+    role="img"
+    aria-label={`${title}. ${subtitle ?? ''}`}
+  ></div>
+
+  <div class="text-xs text-ink/60 space-y-1">
+    {notes.map((n) =>
+      typeof n === 'string' ? (
+        <p>{n}</p>
+      ) : (
+        <p>{n.before}<a href={n.href} target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-ink">{n.linkText}</a>{n.after}</p>
+      ),
+    )}
+    <p>
+      Source:{' '}
+      {sourceHref ? (
+        <a href={sourceHref} target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-ink">{source}</a>
+      ) : (
+        source
+      )}
+    </p>
+  </div>
+</figure>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import type { LikelihoodRow } from './LikelihoodBarChart.astro';
+  import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
+
+  function render(el: HTMLElement) {
+    const rows: LikelihoodRow[] = JSON.parse(el.dataset.rows!);
+    const base = el.dataset.baseLabel!;
+    const compare = el.dataset.compareLabel!;
+    const width = el.clientWidth;
+    const narrow = width < 520;
+    const page = pageColors();
+    const colors = JSON.parse(el.dataset.colors!)[currentTheme()] as [string, string];
+
+    // Each row is one bar from 0 to 1, split at 1/(1 + ratio).
+    // Segments are keyed 'base'/'compare', not by their labels: Plot treats values
+    // that are CSS color names (like "White" and "Black") as literal colors.
+    const segments = rows.flatMap((r) => {
+      const split = 1 / (1 + r.ratio);
+      return [
+        { name: r.name, key: 'base', x1: 0, x2: split },
+        { name: r.name, key: 'compare', x1: split, x2: 1 },
+      ];
+    });
+    const order = rows.map((r) => r.name);
+
+    const chart = Plot.plot({
+      width,
+      height: rows.length * 28 + 8,
+      marginLeft: narrow ? 92 : 112,
+      marginRight: 52, // room for the ratio label after each bar
+      marginTop: 4,
+      marginBottom: 4,
+      style: { fontFamily: 'inherit', fontSize: '12px', color: page.muted, overflow: 'visible' },
+      y: { domain: order, label: null, padding: 0.3, tickSize: 0 },
+      x: { domain: [0, 1], axis: null },
+      color: { domain: ['base', 'compare'], range: colors },
+      marks: [
+        // 1px inset on each side of the split leaves a 2px gap between the segments.
+        Plot.barX(segments.filter((s) => s.key === 'base'), { x1: 'x1', x2: 'x2', y: 'name', fill: 'key', insetRight: 1, rx1: 3 }),
+        Plot.barX(segments.filter((s) => s.key === 'compare'), { x1: 'x1', x2: 'x2', y: 'name', fill: 'key', insetLeft: 1, rx2: 3 }),
+        // The ratio, in ink, just past the end of each bar.
+        Plot.text(rows, { x: 1, y: 'name', text: (r) => `${r.ratio.toFixed(2)}×`, dx: 6, textAnchor: 'start', fill: page.muted }),
+        Plot.tip(
+          rows,
+          Plot.pointerY({
+            x: 1,
+            y: 'name',
+            anchor: 'left',
+            fill: page.paper,
+            stroke: page.faint,
+            channels: {
+              State: 'name',
+              [base]: () => '1.00×',
+              [compare]: (r: LikelihoodRow) => `${r.ratio.toFixed(2)}×`,
+            },
+            format: { x: false, y: false },
+          }),
+        ),
+      ],
+    });
+
+    el.replaceChildren(chart);
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>('.likelihood-chart')) {
+    render(el);
+    onThemeChange(() => render(el));
+    let lastWidth = el.clientWidth;
+    new ResizeObserver(() => {
+      if (el.clientWidth !== lastWidth) {
+        lastWidth = el.clientWidth;
+        render(el);
+      }
+    }).observe(el);
+  }
+</script>

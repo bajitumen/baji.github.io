@@ -1,0 +1,180 @@
+---
+// A student's course grade over the school year (the average of the work
+// graded so far) with quantile projections: actual data as a solid line up to
+// today, then dashed p90 / p50 / p10 paths with shaded bands between them.
+// The average is each cumulative value divided by the share of the course
+// graded at that point, so the projections end at the final course grade.
+// The legend and end labels back up the colors, since the optimistic (green)
+// and pessimistic (red) lines are close for some color-blind readers; they
+// also always sit above and below the realistic line.
+
+import type { GradePoint } from '../data/simulated-grade-projection';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  notes?: string[];
+  points: GradePoint[];
+  todayDate: string; // ISO date where actual data ends
+  colors: Palette; // light mode
+  colorsDark?: Palette; // dark mode (defaults to the light-mode colors)
+}
+type Palette = { actual: string; optimistic: string; pessimistic: string };
+
+const { title, subtitle, notes = [], points, todayDate, colors } = Astro.props;
+const colorsDark = Astro.props.colorsDark ?? colors;
+
+const legend = [
+  { label: 'Actual', key: 'actual', dashed: false },
+  { label: 'Realistic (p50)', key: 'actual', dashed: true },
+  { label: 'Optimistic (p90)', key: 'optimistic', dashed: true },
+  { label: 'Pessimistic (p10)', key: 'pessimistic', dashed: true },
+] as const satisfies readonly { label: string; key: keyof Palette; dashed: boolean }[];
+---
+
+<figure class="space-y-3">
+  <figcaption class="space-y-1">
+    <p class="font-medium">{title}</p>
+    {subtitle && <p class="text-sm text-ink/60">{subtitle}</p>}
+  </figcaption>
+
+  <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink/70" aria-hidden="true">
+    {legend.map((l) => (
+      <li class="flex items-center gap-2">
+        <svg width="22" height="8" viewBox="0 0 22 8">
+          <line x1="1" y1="4" x2="21" y2="4" class="themed-stroke" style={{ '--c-light': colors[l.key], '--c-dark': colorsDark[l.key] }} stroke-width="2" stroke-linecap="round" stroke-dasharray={l.dashed ? '4 3' : undefined} />
+        </svg>
+        {l.label}
+      </li>
+    ))}
+  </ul>
+
+  <div
+    class="projection-chart w-full"
+    data-points={JSON.stringify(points)}
+    data-today={todayDate}
+    data-colors={JSON.stringify({ light: colors, dark: colorsDark })}
+    role="img"
+    aria-label={`${title}. ${subtitle ?? ''}`}
+  ></div>
+
+  <div class="text-xs text-ink/60 space-y-1">
+    {notes.map((n) => <p>{n}</p>)}
+  </div>
+</figure>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import type { GradePoint } from '../data/simulated-grade-projection';
+  import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
+
+  type Row = { date: string; when: Date; item: string; topic?: string; graded: number; actual?: number; p10?: number; p50?: number; p90?: number };
+
+  const DASH = '5 4';
+  const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
+  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+
+  // Course grade so far = cumulative points ÷ share of the course graded.
+  // Points with nothing graded yet (the course start) have no average.
+  function averages(points: GradePoint[]): Row[] {
+    const avg = (v: number | undefined, graded: number) => (v === undefined ? undefined : r1((v / graded) * 100));
+    return points
+      .filter((p) => p.graded > 0)
+      .map((p) => ({
+        date: p.date,
+        when: toDate(p.date),
+        item: p.item,
+        topic: p.topic,
+        graded: p.graded,
+        actual: avg(p.actual, p.graded),
+        p10: avg(p.p10, p.graded),
+        p50: avg(p.p50, p.graded),
+        p90: avg(p.p90, p.graded),
+      }));
+  }
+
+  function render(el: HTMLElement) {
+    const points = averages(JSON.parse(el.dataset.points!) as GradePoint[]);
+    const today = toDate(el.dataset.today!);
+    const c = JSON.parse(el.dataset.colors!)[currentTheme()] as { actual: string; optimistic: string; pessimistic: string };
+    const page = pageColors();
+    const width = el.clientWidth;
+    const narrow = width < 520;
+
+    const actual = points.filter((p) => p.actual !== undefined);
+    const projected = points.filter((p) => p.p50 !== undefined);
+    const end = projected[projected.length - 1];
+
+    // A course grade lives high on the scale, so zoom to the data (rounded down
+    // to a multiple of 10) to keep its movement visible.
+    const low = Math.min(...points.flatMap((p) => [p.actual, p.p10].filter((v): v is number => v !== undefined)));
+    const yDomain = [Math.max(0, Math.floor((low - 5) / 10) * 10), 100];
+
+    const ends = [
+      { y: end.p90!, dy: -6, text: narrow ? `${end.p90}%` : `Optimistic ${end.p90}%`, color: c.optimistic },
+      { y: end.p50!, dy: 0, text: narrow ? `${end.p50}%` : `Realistic ${end.p50}%`, color: c.actual },
+      { y: end.p10!, dy: 6, text: narrow ? `${end.p10}%` : `Pessimistic ${end.p10}%`, color: c.pessimistic },
+    ];
+
+    const label = (p: Row) => `${p.item}${p.topic ? ` (${p.topic})` : ''}\n${fmtDate(p.when)}`;
+    const share = (p: Row) => `\n${p.graded}% of the course graded`;
+
+    const chart = Plot.plot({
+      width,
+      height: 300,
+      marginLeft: 36,
+      marginRight: narrow ? 44 : 118,
+      marginTop: 20,
+      style: { fontFamily: 'inherit', fontSize: '12px', color: page.muted, overflow: 'visible' },
+      x: { type: 'utc', label: null, ticks: narrow ? '2 months' : 'month', tickFormat: '%b', tickSize: 0 },
+      y: { domain: yDomain, label: null, grid: true, tickSize: 0, tickFormat: (d: number) => `${d}%` },
+      marks: [
+        // Bands: optimistic above the realistic line, pessimistic below, each at 50% opacity.
+        Plot.areaY(projected, { x: 'when', y1: 'p50', y2: 'p90', fill: c.optimistic, fillOpacity: 0.5 }),
+        Plot.areaY(projected, { x: 'when', y1: 'p10', y2: 'p50', fill: c.pessimistic, fillOpacity: 0.5 }),
+        // Today marker at the midterm.
+        Plot.ruleX([today], { stroke: page.rule, strokeDasharray: '2 3' }),
+        Plot.text([today], { x: (d) => d, frameAnchor: 'top', dy: -12, text: () => 'Midterm · today', fill: page.muted }),
+        // Projected paths (dashed), then the actual line (solid) on top.
+        Plot.lineY(projected, { x: 'when', y: 'p90', stroke: c.optimistic, strokeWidth: 2, strokeDasharray: DASH }),
+        Plot.lineY(projected, { x: 'when', y: 'p10', stroke: c.pessimistic, strokeWidth: 2, strokeDasharray: DASH }),
+        Plot.lineY(projected, { x: 'when', y: 'p50', stroke: c.actual, strokeWidth: 2, strokeDasharray: DASH }),
+        Plot.lineY(actual, { x: 'when', y: 'actual', stroke: c.actual, strokeWidth: 2 }),
+        // End labels: colored dot, text in ink. One text mark per label so each
+        // can nudge away from its neighbors.
+        Plot.dot(ends, { x: end.when, y: 'y', fill: 'color', r: 3 }),
+        ...ends.map((e) => Plot.text([e], { x: end.when, y: 'y', dy: e.dy, text: 'text', dx: 8, textAnchor: 'start', fill: page.muted })),
+        // Hover: crosshair and a tooltip for the nearest graded item.
+        Plot.ruleX(points, Plot.pointerX({ x: 'when', stroke: page.faint })),
+        Plot.tip(
+          points,
+          Plot.pointerX({
+            x: 'when',
+            y: (p: Row) => p.actual ?? p.p50,
+            fill: page.paper,
+            stroke: page.faint,
+            title: (p: Row) =>
+              p.actual !== undefined
+                ? `${label(p)}${p.date === el.dataset.today ? ' (today)' : ''}\nCourse grade so far: ${p.actual}%${share(p)}`
+                : `${label(p)}\nOptimistic (p90): ${p.p90}%\nRealistic (p50): ${p.p50}%\nPessimistic (p10): ${p.p10}%${share(p)}`,
+          }),
+        ),
+      ],
+    });
+
+    el.replaceChildren(chart);
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>('.projection-chart')) {
+    render(el);
+    onThemeChange(() => render(el));
+    let lastWidth = el.clientWidth;
+    new ResizeObserver(() => {
+      if (el.clientWidth !== lastWidth) {
+        lastWidth = el.clientWidth;
+        render(el);
+      }
+    }).observe(el);
+  }
+</script>

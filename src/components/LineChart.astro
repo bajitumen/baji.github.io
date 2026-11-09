@@ -1,0 +1,140 @@
+---
+// A line chart drawn with Observable Plot in the browser.
+// With two or more series it shows a legend plus a label at the end of each
+// line, so no line is identified by color alone. Hovering shows the nearest
+// point. Colors follow the light/dark theme.
+
+export interface Series {
+  name: string; // full name, used in the legend and tooltip
+  label: string; // short name, drawn at the end of the line
+  color: string; // light mode
+  colorDark?: string; // dark mode (defaults to color)
+  points: { date: string; value: number }[]; // ISO dates, e.g. 2020-04-11
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  note?: string;
+  source: string;
+  sourceHref?: string;
+  valueLabel: string;
+  series: Series[];
+}
+
+const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.props;
+---
+
+<figure class="space-y-3">
+  <figcaption class="space-y-1">
+    <p class="font-medium">{title}</p>
+    {subtitle && <p class="text-sm text-ink/60">{subtitle}</p>}
+  </figcaption>
+
+  {series.length > 1 && (
+    <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink/70" aria-hidden="true">
+      {series.map((s) => (
+        <li class="flex items-center gap-2">
+          <span class="themed-bg inline-block h-2.5 w-2.5 rounded-full" style={{ '--c-light': s.color, '--c-dark': s.colorDark ?? s.color }}></span>
+          {s.name}
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <div
+    class="line-chart w-full"
+    data-series={JSON.stringify(series)}
+    data-value-label={valueLabel}
+    role="img"
+    aria-label={`${title}. ${subtitle ?? ''}`}
+  ></div>
+
+  <div class="text-xs text-ink/60 space-y-1">
+    {note && <p>{note}</p>}
+    <p>
+      Source:{' '}
+      {sourceHref ? (
+        <a href={sourceHref} target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-ink">{source}</a>
+      ) : (
+        source
+      )}
+    </p>
+  </div>
+</figure>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import type { Series } from './LineChart.astro';
+  import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
+
+  const LABEL_MIN_WIDTH = 520; // below this, end labels don't fit; the legend carries identity
+
+  function render(el: HTMLElement) {
+    const series: Series[] = JSON.parse(el.dataset.series!);
+    const valueLabel = el.dataset.valueLabel!;
+    const width = el.clientWidth;
+    const showEndLabels = series.length > 1 && width >= LABEL_MIN_WIDTH;
+    const page = pageColors();
+    const dark = currentTheme() === 'dark';
+
+    const rows = series.flatMap((s) =>
+      s.points.map((p) => ({ series: s.name, label: s.label, date: new Date(`${p.date}T00:00:00Z`), value: p.value })),
+    );
+    const ends = series.map((s) => {
+      const p = s.points[s.points.length - 1];
+      return { series: s.name, label: s.label, date: new Date(`${p.date}T00:00:00Z`), value: p.value };
+    });
+
+    const chart = Plot.plot({
+      width,
+      height: 280,
+      marginLeft: 48,
+      marginRight: showEndLabels ? 110 : 12,
+      style: { fontFamily: 'inherit', fontSize: '12px', color: page.muted, overflow: 'visible' },
+      x: { type: 'utc', label: null, ticks: width < LABEL_MIN_WIDTH ? 4 : 6, tickSize: 0 },
+      y: { label: null, grid: true, nice: true, zero: true, tickSize: 0 },
+      color: { domain: series.map((s) => s.name), range: series.map((s) => (dark ? s.colorDark ?? s.color : s.color)) },
+      marks: [
+        Plot.ruleY([0], { stroke: page.rule }),
+        Plot.lineY(rows, { x: 'date', y: 'value', z: 'series', stroke: 'series', strokeWidth: 2 }),
+        // End-of-line labels: the dot carries the color, the text stays in ink.
+        ...(showEndLabels
+          ? [
+              Plot.dot(ends, { x: 'date', y: 'value', fill: 'series', r: 3 }),
+              Plot.text(ends, { x: 'date', y: 'value', text: 'label', dx: 8, textAnchor: 'start', fill: page.muted }),
+            ]
+          : []),
+        // Hover layer: nearest point across all lines. The dot's ring matches the page.
+        Plot.ruleX(rows, Plot.pointer({ x: 'date', stroke: page.faint })),
+        Plot.dot(rows, Plot.pointer({ x: 'date', y: 'value', fill: 'series', r: 4, stroke: page.paper, strokeWidth: 2 })),
+        Plot.tip(
+          rows,
+          Plot.pointer({
+            x: 'date',
+            y: 'value',
+            fill: page.paper,
+            stroke: page.faint,
+            channels: { Series: 'series', Date: 'date', [valueLabel]: 'value' },
+            format: { x: false, y: false, stroke: false, Date: '%b %-d, %Y', [valueLabel]: ',d' },
+          }),
+        ),
+      ],
+    });
+
+    el.replaceChildren(chart);
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>('.line-chart')) {
+    render(el);
+    onThemeChange(() => render(el));
+    // Redraw when the column width changes, e.g. rotating a phone.
+    let lastWidth = el.clientWidth;
+    new ResizeObserver(() => {
+      if (el.clientWidth !== lastWidth) {
+        lastWidth = el.clientWidth;
+        render(el);
+      }
+    }).observe(el);
+  }
+</script>

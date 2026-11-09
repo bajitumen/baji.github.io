@@ -17,6 +17,18 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Set the theme before the page paints, so it never flashes the wrong
+         colors: the visitor's saved choice, else their device setting. -->
+    <script is:inline>
+      (() => {
+        let theme;
+        try { theme = localStorage.getItem('theme'); } catch {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/images/Vector.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
