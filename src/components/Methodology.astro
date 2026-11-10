@@ -1,0 +1,13 @@
+---
+// A collapsible "Methodology" section under a project's chart, styled like the
+// earlier "View data as a table" toggle: the browser's own disclosure triangle
+// and small gray text. Built on <details>/<summary>, so it works with the
+// keyboard and screen readers without any script.
+---
+
+<details class="text-sm">
+  <summary class="cursor-pointer text-ink/60 hover:text-ink">Methodology</summary>
+  <div class="mt-2 space-y-3 leading-relaxed text-ink/80">
+    <slot />
+  </div>
+</details>

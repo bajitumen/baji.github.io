@@ -50,8 +50,6 @@ const compareColorDark = Astro.props.compareColorDark ?? compareColor;
   <div
     class="likelihood-chart w-full"
     data-rows={JSON.stringify(rows)}
-    data-base-label={baseLabel}
-    data-compare-label={compareLabel}
     data-colors={JSON.stringify({ light: [baseColor, compareColor], dark: [baseColorDark, compareColorDark] })}
     role="img"
     aria-label={`${title}. ${subtitle ?? ''}`}
@@ -88,8 +86,6 @@ const compareColorDark = Astro.props.compareColorDark ?? compareColor;
     const Plot = await plotFor(el); // loads the chart library on first use
     if (!Plot) return; // a newer draw of this chart has started
     const rows: LikelihoodRow[] = JSON.parse(el.dataset.rows!);
-    const base = el.dataset.baseLabel!;
-    const compare = el.dataset.compareLabel!;
     const width = el.clientWidth;
     const narrow = width < 520;
     const page = pageColors();
@@ -122,24 +118,9 @@ const compareColorDark = Astro.props.compareColorDark ?? compareColor;
         // 1px inset on each side of the split leaves a 2px gap between the segments.
         Plot.barX(segments.filter((s) => s.key === 'base'), { x1: 'x1', x2: 'x2', y: 'name', fill: 'key', insetRight: 1, rx1: 3 }),
         Plot.barX(segments.filter((s) => s.key === 'compare'), { x1: 'x1', x2: 'x2', y: 'name', fill: 'key', insetLeft: 1, rx2: 3 }),
-        // The ratio, in ink, just past the end of each bar.
+        // The ratio, in muted ink, just past the end of each bar. No hover
+        // tooltip: the labels already show every value.
         Plot.text(rows, { x: 1, y: 'name', text: (r) => `${r.ratio.toFixed(2)}×`, dx: 6, textAnchor: 'start', fill: page.muted }),
-        Plot.tip(
-          rows,
-          Plot.pointerY({
-            x: 1,
-            y: 'name',
-            anchor: 'left',
-            fill: page.paper,
-            stroke: page.faint,
-            channels: {
-              State: 'name',
-              [base]: () => '1.00×',
-              [compare]: (r: LikelihoodRow) => `${r.ratio.toFixed(2)}×`,
-            },
-            format: { x: false, y: false },
-          }),
-        ),
       ],
     });
 

@@ -26,9 +26,9 @@ const colorsDark = Astro.props.colorsDark ?? colors;
 
 const legend = [
   { label: 'Actual', key: 'actual', dashed: false },
-  { label: 'Realistic (p50)', key: 'actual', dashed: true },
-  { label: 'Optimistic (p90)', key: 'optimistic', dashed: true },
-  { label: 'Pessimistic (p10)', key: 'pessimistic', dashed: true },
+  { label: 'Realistic', key: 'actual', dashed: true },
+  { label: 'Optimistic', key: 'optimistic', dashed: true },
+  { label: 'Pessimistic', key: 'pessimistic', dashed: true },
 ] as const satisfies readonly { label: string; key: keyof Palette; dashed: boolean }[];
 ---
 
@@ -58,9 +58,11 @@ const legend = [
     aria-label={`${title}. ${subtitle ?? ''}`}
   ></div>
 
-  <div class="text-xs text-ink/60 space-y-1">
-    {notes.map((n) => <p>{n}</p>)}
-  </div>
+  {notes.length > 0 && (
+    <div class="text-xs text-ink/60 space-y-1">
+      {notes.map((n) => <p>{n}</p>)}
+    </div>
+  )}
 </figure>
 
 <script>
@@ -72,7 +74,6 @@ const legend = [
 
   const DASH = '5 4';
   const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
-  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
   const r1 = (n: number) => Math.round(n * 10) / 10;
 
   // Course grade so far = cumulative points ÷ share of the course graded.
@@ -122,7 +123,7 @@ const legend = [
       { y: end.p10!, dy: 6, text: narrow ? `${end.p10}%` : `Pessimistic ${end.p10}%`, color: c.pessimistic },
     ];
 
-    const label = (p: Row) => `${p.item}${p.topic ? ` (${p.topic})` : ''}\n${fmtDate(p.when)}`;
+    const label = (p: Row) => `${p.item}${p.topic ? ` (${p.topic})` : ''}`;
     const share = (p: Row) => `\n${p.graded}% of the course graded`;
 
     const chart = Plot.plot({
@@ -162,7 +163,7 @@ const legend = [
             title: (p: Row) =>
               p.actual !== undefined
                 ? `${label(p)}${p.date === el.dataset.today ? ' (today)' : ''}\nCourse grade so far: ${p.actual}%${share(p)}`
-                : `${label(p)}\nOptimistic (p90): ${p.p90}%\nRealistic (p50): ${p.p50}%\nPessimistic (p10): ${p.p10}%${share(p)}`,
+                : `${label(p)}\nOptimistic: ${p.p90}%\nRealistic: ${p.p50}%\nPessimistic: ${p.p10}%${share(p)}`,
           }),
         ),
       ],

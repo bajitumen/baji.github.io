@@ -8,6 +8,8 @@ import covidCsv from '../data/ucla-covid-cumulative-cases.csv?raw';
 import LikelihoodBarChart, { type LikelihoodRow } from '../components/LikelihoodBarChart.astro';
 import felonyMurderData from '../data/felony-murder-race-by-state.json';
 import ProjectionChart from '../components/ProjectionChart.astro';
+import Methodology from '../components/Methodology.astro';
+import Math from '../components/Math.astro';
 import { gradeProjection, todayDate } from '../data/simulated-grade-projection';
 
 // Cumulative confirmed COVID-19 cases among incarcerated people, from the
@@ -67,7 +69,10 @@ const updatedIso = updated.toISOString().slice(0, 7);
         <Employer name="Vals AI" href="https://www.vals.ai/home" />, building evals for social mobility (SNAP, Medicare, etc.) and mental health.
       </p>
 
-      <div role="tablist" aria-label="Sections" class="mt-10 flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2 text-sm">
+      <!-- Tabs, then a CV link styled like them. The CV is a plain link (it opens
+           a PDF), so it sits outside the tablist rather than posing as a tab. -->
+      <div class="mt-10 flex flex-wrap items-start gap-x-6 sm:gap-x-8 gap-y-2 text-sm">
+      <div role="tablist" aria-label="Sections" class="flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2">
         {tabs.map((tab, i) => (
           <button
             type="button"
@@ -82,6 +87,13 @@ const updatedIso = updated.toISOString().slice(0, 7);
             {tab}
           </button>
         ))}
+      </div>
+      <a
+        href="https://drive.google.com/file/d/1Z_qzO2KrPefsfszXgmbxgJzbBeBNGS9O/view?usp=sharing"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="pb-0.5 border-b-[1.5px] border-transparent text-ink/55 hover:text-ink transition-colors"
+      >cv</a>
       </div>
 
       <!-- Only the selected panel is shown; the others are hidden entirely, so
@@ -104,19 +116,33 @@ const updatedIso = updated.toISOString().slice(0, 7);
         </div>
 
         <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="hidden space-y-16">
+          <div class="space-y-4">
           <ProjectionChart
             title="Simulated: projecting a student's final grade at Subject"
             subtitle="Course grade so far in a 10-unit physics course, 2025–26 (average of the work graded to date). Actual work through the January midterm; projected range for the rest of the year."
-            notes={[
-              'Simulated data for illustration: not a real student or real model output.',
-              'Projections show the p90 (optimistic), p50 (realistic) and p10 (pessimistic) predictions of a quantile model, the approach behind Subject’s predictive student-success scores.',
-              'Each unit has a homework (1.5%), problem set (1.5%) and lab (3%); midterm 15%, final 25%.',
-            ]}
             points={gradeProjection}
             todayDate={todayDate}
             colors={{ actual: '#2a78d6', optimistic: '#008300', pessimistic: '#e34948' }}
             colorsDark={{ actual: '#3987e5', optimistic: '#008300', pessimistic: '#e66767' }}
           />
+          <Methodology>
+            <p>
+              Subject's predictive model estimates each student's final course grade as a range
+              rather than a single number. It uses quantile gradient-boosted trees, which predict a
+              pessimistic, a realistic and an optimistic outcome, and calibrates those ranges with
+              conformalized quantile regression so they hold up in practice. The calibration is
+              asymmetric and done separately within groups, so the downside can be wider than the
+              upside. The model is retrained and rescored nightly, using only information that would
+              have been available at the time of each prediction.
+            </p>
+            <p>
+              The chart uses simulated data: one fictional student in a 10-unit physics course, with
+              actual grades through the January midterm and projections like the model's for the
+              rest of the year.
+            </p>
+          </Methodology>
+          </div>
+          <div class="space-y-4">
           <LikelihoodBarChart
             title="Felony murder: how much more likely Black people are to be incarcerated than white people"
             subtitle="Each bar splits the two groups' likelihood of incarceration for felony murder: white residents are 1 part, Black residents the number shown."
@@ -137,6 +163,36 @@ const updatedIso = updated.toISOString().slice(0, 7);
             baseColorDark="#F2F0EF"
             rows={felonyMurderRows}
           />
+          <Methodology>
+            <p>
+              The Felony Murder Reporting Project assembled state data from public records requests,
+              online prison rosters and existing research. A few states, such as Connecticut, Maine
+              and Wisconsin, record felony murder under its own statute in their correctional data.
+              In others it had to be identified through legal definitions and charge codes, or by
+              matching court records to correctional rosters. Of the 18 states where analysis was
+              possible, 11 had datasets verified as close to complete and 7 had partial data; most
+              states could not provide usable data at all.
+            </p>
+            <p>
+              Each ratio comes from Bayes' theorem. For each group, the likelihood of being
+              incarcerated for felony murder (FM) is
+            </p>
+            <Math display tex={String.raw`P(\text{FM} \mid \text{Black}) = \frac{P(\text{Black} \mid \text{FM}) \, P(\text{FM})}{P(\text{Black})}`} />
+            <p>
+              where <Math tex={String.raw`P(\text{Black} \mid \text{FM})`} /> is the group's share of
+              felony murder cases, <Math tex={String.raw`P(\text{FM})`} /> is the state's overall
+              felony murder rate, and <Math tex={String.raw`P(\text{Black})`} /> is the group's share
+              of the state's population (2022 Census estimates). The number shown is the ratio
+            </p>
+            <Math display tex={String.raw`\frac{P(\text{FM} \mid \text{Black})}{P(\text{FM} \mid \text{White})}`} />
+            <p>
+              These are overall rates. They don't adjust for other factors such as age, income or
+              criminal history, so they measure the size of the disparity rather than the effect of
+              race alone. In Colorado the comparison is of convictions, and in Alabama of charges,
+              rather than incarceration.
+            </p>
+          </Methodology>
+          </div>
           <LineChart
             title="COVID-19 cases among incarcerated people, 2020–2023"
             subtitle="Cumulative confirmed cases among people held in each system or facility."

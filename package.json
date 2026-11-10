@@ -16,6 +16,7 @@
     "@observablehq/plot": "^0.6.19",
     "@tailwindcss/vite": "^4.0.0",
     "astro": "^5.0.0",
+    "katex": "^0.19.1",
     "tailwindcss": "^4.0.0"
   }
 }

@@ -1,0 +1,19 @@
+---
+// LaTeX math, rendered with KaTeX when the site is built: visitors get finished
+// HTML (plus MathML for screen readers) and no math code to run. The math
+// fonts load only when an equation is actually displayed. Colors inherit the
+// surrounding text, so equations follow light and dark mode.
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+interface Props {
+  tex: string; // LaTeX source, e.g. "P(A \\mid B)"
+  display?: boolean; // true: its own centered line; false: inline in a sentence
+}
+
+const { tex, display = false } = Astro.props;
+// throwOnError: a typo in the LaTeX fails the build instead of shipping broken math.
+const html = katex.renderToString(tex, { displayMode: display, output: 'htmlAndMathml', throwOnError: true });
+---
+
+{display ? <div class="overflow-x-auto overflow-y-hidden" set:html={html} /> : <span set:html={html} />}
