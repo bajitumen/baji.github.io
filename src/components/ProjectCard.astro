@@ -12,10 +12,13 @@ interface Props {
 }
 
 const { project } = Astro.props;
+// With the trailing slash: GitHub Pages serves project pages at
+// /projects/<slug>/ and redirects the address without it, an extra hop.
+const href = `/projects/${project.slug}/`;
 ---
 
 <a
-  href={`/projects/${project.slug}`}
+  href={href}
   class="group flex items-center gap-4 rounded-lg border border-ink/10 p-4 hover:border-ink/30 transition-colors"
 >
   <!-- Preview hidden on phones, where it would squeeze the text. -->
