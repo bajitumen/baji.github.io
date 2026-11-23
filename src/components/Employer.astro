@@ -12,8 +12,10 @@ const colors = {
   'Pulitzer Prize': { light: '#8C6D1F', dark: '#A18747' },
 };
 
+export type EmployerName = keyof typeof colors;
+
 interface Props {
-  name: keyof typeof colors;
+  name: EmployerName;
   href?: string;
 }
 

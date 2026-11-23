@@ -47,6 +47,8 @@ body {
 .themed-text { color: var(--c-light); }
 .themed-bg { background-color: var(--c-light); }
 .themed-stroke { stroke: var(--c-light); }
+.themed-fill { fill: var(--c-light); }
 :root[data-theme="dark"] .themed-text { color: var(--c-dark); }
 :root[data-theme="dark"] .themed-bg { background-color: var(--c-dark); }
 :root[data-theme="dark"] .themed-stroke { stroke: var(--c-dark); }
+:root[data-theme="dark"] .themed-fill { fill: var(--c-dark); }

@@ -1,0 +1,41 @@
+---
+// Header row shared by every page: the site icon on the left, spanning the
+// height of the two right-hand rows (theme toggle and last-updated date).
+// The icon goes to the about tab. On the home page the tab script handles it
+// in place (data-tab-link); elsewhere it's an ordinary link home.
+import { execSync } from 'node:child_process';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  home?: boolean; // true on the home page
+}
+
+const { home = false } = Astro.props;
+
+// "Last updated": the month of the latest commit. GitHub rebuilds the site on
+// every push, so this tracks real content changes. Falls back to build time.
+let updated = new Date();
+try {
+  updated = new Date(execSync('git log -1 --format=%cI', { encoding: 'utf8' }).trim());
+} catch {}
+const updatedLabel = updated.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const updatedIso = updated.toISOString().slice(0, 7);
+---
+
+<div class="mb-6 flex justify-between items-stretch">
+  <a
+    href={home ? '#about' : '/#about'}
+    data-tab-link={home ? 'about' : undefined}
+    aria-label="Go to about"
+    class="self-stretch hover:opacity-70 transition-opacity"
+  >
+    <!-- Placeholder icon: Phosphor "smiley", regular weight (MIT license, phosphoricons.com). -->
+    <svg class="h-full w-auto text-ink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+      <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"/>
+    </svg>
+  </a>
+  <div class="flex flex-col items-end gap-2">
+    <ThemeToggle />
+    <p class="text-sm text-ink/55">Last updated <time datetime={updatedIso}>{updatedLabel}</time></p>
+  </div>
+</div>

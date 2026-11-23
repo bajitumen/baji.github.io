@@ -1,0 +1,37 @@
+---
+import ProjectPage from '../../layouts/ProjectPage.astro';
+import BackCrumb from '../../components/BackCrumb.astro';
+import ProjectionChart from '../../components/ProjectionChart.astro';
+import Methodology from '../../components/Methodology.astro';
+import { gradeProjection, todayDate } from '../../data/simulated-grade-projection';
+import { gradeColors } from '../../data/chart-colors';
+---
+
+<ProjectPage slug="subject">
+  <ProjectionChart
+    title="Simulated: projecting a student's final grade at Subject"
+    subtitle="Course grade so far in a 10-unit physics course, 2025–26 (average of the work graded to date). Actual work through the January midterm; projected range for the rest of the year."
+    points={gradeProjection}
+    todayDate={todayDate}
+    colors={gradeColors.light}
+    colorsDark={gradeColors.dark}
+  >
+    <BackCrumb slot="title-prefix" />
+  </ProjectionChart>
+  <Methodology>
+    <p>
+      Subject's predictive model estimates each student's final course grade as a range rather
+      than a single number. It uses quantile gradient-boosted trees, which predict a pessimistic,
+      a realistic and an optimistic outcome, and calibrates those ranges with conformalized
+      quantile regression so they hold up in practice. The calibration is asymmetric and done
+      separately within groups, so the downside can be wider than the upside. The model is
+      retrained and rescored nightly, using only information that would have been available at
+      the time of each prediction.
+    </p>
+    <p>
+      The chart uses simulated data: one fictional student in a 10-unit physics course, with
+      actual grades through the January midterm and projections like the model's for the rest of
+      the year.
+    </p>
+  </Methodology>
+</ProjectPage>

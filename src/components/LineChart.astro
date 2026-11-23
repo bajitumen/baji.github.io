@@ -23,11 +23,16 @@ interface Props {
 }
 
 const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.props;
+// The chart's height, reserved on the page before it draws, so the page
+// doesn't change length when it appears (which would also cut short a
+// scroll position kept across navigation).
+const height = 280;
 ---
 
 <figure class="space-y-3">
   <figcaption class="space-y-1">
-    <p class="font-medium">{title}</p>
+    <!-- title-prefix: optional content before the title, e.g. the back arrow. -->
+    <p class="font-medium"><slot name="title-prefix" />{title}</p>
     {subtitle && <p class="text-sm text-ink/60">{subtitle}</p>}
   </figcaption>
 
@@ -44,6 +49,8 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
 
   <div
     class="line-chart w-full"
+    style={{ minHeight: `${height}px` }}
+    data-height={height}
     data-series={JSON.stringify(series)}
     data-value-label={valueLabel}
     role="img"
@@ -66,7 +73,7 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
 <script>
   import { plotFor } from '../scripts/plot';
   import type { Series } from './LineChart.astro';
-  import { currentTheme, pageColors, onThemeChange } from '../scripts/theme';
+  import { currentTheme, pageColors, onThemeChange, onEachPage } from '../scripts/theme';
 
   const LABEL_MIN_WIDTH = 520; // below this, end labels don't fit; the legend carries identity
 
@@ -74,7 +81,7 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
     // Hidden (e.g. in an unselected tab): nothing to draw yet. The
     // ResizeObserver below draws the chart once it becomes visible.
     if (el.clientWidth === 0) return;
-    const Plot = await plotFor(el); // loads the chart library on first use
+    const Plot = await plotFor(el); // the chart library, already downloading since page load
     if (!Plot) return; // a newer draw of this chart has started
     const series: Series[] = JSON.parse(el.dataset.series!);
     const valueLabel = el.dataset.valueLabel!;
@@ -93,7 +100,7 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
 
     const chart = Plot.plot({
       width,
-      height: 280,
+      height: Number(el.dataset.height),
       marginLeft: 48,
       marginRight: showEndLabels ? 110 : 12,
       style: { fontFamily: 'inherit', fontSize: '11px', color: page.muted, overflow: 'visible' },
@@ -130,16 +137,20 @@ const { title, subtitle, note, source, sourceHref, valueLabel, series } = Astro.
     el.replaceChildren(chart);
   }
 
-  for (const el of document.querySelectorAll<HTMLElement>('.line-chart')) {
+  // Set up each chart on every page that has one (first load and every page
+  // swap); the signal cleans up the listener and observer when it's swapped out.
+  onEachPage('.line-chart', (el, signal) => {
     render(el);
-    onThemeChange(() => render(el));
+    onThemeChange(() => render(el), signal);
     // Redraw when the column width changes, e.g. rotating a phone.
     let lastWidth = el.clientWidth;
-    new ResizeObserver(() => {
+    const observer = new ResizeObserver(() => {
       if (el.clientWidth !== lastWidth) {
         lastWidth = el.clientWidth;
         render(el);
       }
-    }).observe(el);
-  }
+    });
+    observer.observe(el);
+    signal.addEventListener('abort', () => observer.disconnect());
+  });
 </script>

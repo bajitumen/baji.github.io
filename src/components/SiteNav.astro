@@ -1,0 +1,46 @@
+---
+// The about / projects / contact row on every page.
+// On the home page these are real tabs that switch the panels in place (the
+// tab script in index.astro drives them). On other pages they are ordinary
+// links to those tabs on the home page, styled the same, with the current
+// section underlined.
+export const sections = ['about', 'projects', 'contact'] as const;
+export type Section = (typeof sections)[number];
+
+interface Props {
+  home?: boolean; // true on the home page: render as tabs
+  current?: Section; // the section to underline on other pages
+}
+
+const { home = false, current } = Astro.props;
+const item = 'pb-0.5 border-b-[1.5px] border-transparent text-ink/55 hover:text-ink transition-colors';
+const selected = 'aria-selected:text-ink aria-selected:border-ink aria-[current=page]:text-ink aria-[current=page]:border-ink';
+const row = 'mt-10 flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-2 text-sm';
+---
+
+{home ? (
+  <div role="tablist" aria-label="Sections" class={row}>
+    {sections.map((section, i) => (
+      <button
+        type="button"
+        role="tab"
+        id={`tab-${section}`}
+        data-tab={section}
+        aria-controls={`panel-${section}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        class={`${item} ${selected} cursor-pointer`}
+      >
+        {section}
+      </button>
+    ))}
+  </div>
+) : (
+  <nav aria-label="Sections" class={row}>
+    {sections.map((section) => (
+      <a href={`/#${section}`} aria-current={section === current ? 'page' : undefined} class={`${item} ${selected}`}>
+        {section}
+      </a>
+    ))}
+  </nav>
+)}

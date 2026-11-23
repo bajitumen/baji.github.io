@@ -1,0 +1,22 @@
+---
+// A project's own page: the shared header, intro and section links (with
+// "projects" underlined), then the project's chart and methodology (passed in
+// as the slot; each chart's title starts with a back arrow). The title and
+// summary appear in the browser tab and link previews, and the title is the
+// page's heading for screen readers.
+import Page from './Page.astro';
+import { projectBySlug } from '../data/projects';
+
+interface Props {
+  slug: string;
+}
+
+const project = projectBySlug(Astro.props.slug);
+---
+
+<Page title={`${project.title} · Baji Tumendemberel`} description={project.summary} current="projects">
+  <h1 class="sr-only">{project.title}</h1>
+  <div class="space-y-4">
+    <slot />
+  </div>
+</Page>

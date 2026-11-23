@@ -1,10 +1,11 @@
-// Loads Observable Plot on demand. Charts call this when they first need to
-// draw (i.e. when the projects tab is shown), so visitors who never open it
-// never download the library, and nothing else on the page waits for it.
+// Loads Observable Plot for the charts. The download starts as soon as the
+// page loads (in the background, without blocking anything else, since the
+// tab script runs first and doesn't depend on it), so the charts are ready to
+// draw the moment the projects tab opens.
 
 type PlotModule = typeof import('./plot-marks');
 
-let loading: Promise<PlotModule> | undefined;
+const loading: Promise<PlotModule> = import('./plot-marks');
 const latest = new WeakMap<HTMLElement, number>();
 
 // Returns Plot for drawing into `el`, or null if a newer draw of the same chart
@@ -13,7 +14,6 @@ const latest = new WeakMap<HTMLElement, number>();
 export async function plotFor(el: HTMLElement): Promise<PlotModule | null> {
   const id = (latest.get(el) ?? 0) + 1;
   latest.set(el, id);
-  loading ??= import('./plot-marks');
   const Plot = await loading;
   return latest.get(el) === id ? Plot : null;
 }

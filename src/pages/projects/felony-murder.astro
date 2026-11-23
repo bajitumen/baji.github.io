@@ -1,0 +1,70 @@
+---
+import ProjectPage from '../../layouts/ProjectPage.astro';
+import BackCrumb from '../../components/BackCrumb.astro';
+import LikelihoodBarChart, { type LikelihoodRow } from '../../components/LikelihoodBarChart.astro';
+import Methodology from '../../components/Methodology.astro';
+import Math from '../../components/Math.astro';
+import felonyMurderData from '../../data/felony-murder-race-by-state.json';
+import { felonyColors } from '../../data/chart-colors';
+
+// How many times more likely Black people are than white people to be
+// incarcerated for felony murder, as published on each state page of the
+// Felony Murder Reporting Project. Per-state caveats (data rating, measure,
+// exclusions) are kept in the JSON and left to the project's own state pages.
+const rows: LikelihoodRow[] = felonyMurderData.map((d) => ({ name: d.state, ratio: d.ratio }));
+---
+
+<ProjectPage slug="felony-murder">
+  <LikelihoodBarChart
+    title="Felony murder: how much more likely Black people are to be incarcerated than white people"
+    subtitle="Each bar splits the two groups' likelihood of incarceration for felony murder: white residents are 1 part, Black residents the number shown."
+    notes={[
+      {
+        before: 'For state-specific information, visit the ',
+        linkText: 'Felony Murder Reporting Project’s state pages',
+        href: 'https://felonymurderreporting.org/states/',
+        after: '.',
+      },
+    ]}
+    source="Felony Murder Reporting Project"
+    sourceHref="https://felonymurderreporting.org/states/"
+    baseLabel="White"
+    compareLabel="Black"
+    baseColor={felonyColors.light.base}
+    compareColor={felonyColors.light.compare}
+    baseColorDark={felonyColors.dark.base}
+    compareColorDark={felonyColors.dark.compare}
+    rows={rows}
+  >
+    <BackCrumb slot="title-prefix" />
+  </LikelihoodBarChart>
+  <Methodology>
+    <p>
+      The Felony Murder Reporting Project assembled state data from public records requests,
+      online prison rosters and existing research. A few states, such as Connecticut, Maine and
+      Wisconsin, record felony murder under its own statute in their correctional data. In others
+      it had to be identified through legal definitions and charge codes, or by matching court
+      records to correctional rosters. Of the 18 states where analysis was possible, 11 had
+      datasets verified as close to complete and 7 had partial data; most states could not provide
+      usable data at all.
+    </p>
+    <p>
+      Each ratio comes from Bayes' theorem. For each group, the likelihood of being incarcerated
+      for felony murder (FM) is
+    </p>
+    <Math display tex={String.raw`P(\text{FM} \mid \text{Black}) = \frac{P(\text{Black} \mid \text{FM}) \, P(\text{FM})}{P(\text{Black})}`} />
+    <p>
+      where <Math tex={String.raw`P(\text{Black} \mid \text{FM})`} /> is the group's share of felony
+      murder cases, <Math tex={String.raw`P(\text{FM})`} /> is the state's overall felony murder
+      rate, and <Math tex={String.raw`P(\text{Black})`} /> is the group's share of the state's
+      population (2022 Census estimates). The number shown is the ratio
+    </p>
+    <Math display tex={String.raw`\frac{P(\text{FM} \mid \text{Black})}{P(\text{FM} \mid \text{White})}`} />
+    <p>
+      These are overall rates. They don't adjust for other factors such as age, income or criminal
+      history, so they measure the size of the disparity rather than the effect of race alone. In
+      Colorado the comparison is of convictions, and in Alabama of charges, rather than
+      incarceration.
+    </p>
+  </Methodology>
+</ProjectPage>

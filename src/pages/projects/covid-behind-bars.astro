@@ -1,0 +1,20 @@
+---
+import ProjectPage from '../../layouts/ProjectPage.astro';
+import BackCrumb from '../../components/BackCrumb.astro';
+import LineChart from '../../components/LineChart.astro';
+import { covidSeries } from '../../data/covid';
+---
+
+<ProjectPage slug="covid-behind-bars">
+  <LineChart
+    title="COVID-19 cases among incarcerated people, 2020–2023"
+    subtitle="Cumulative confirmed cases among people held in each system or facility."
+    note="Data reflect what carceral agencies reported. Each line ends at its last available report."
+    source="UCLA Law COVID Behind Bars Data Project"
+    sourceHref="https://uclaprisondata.org/"
+    valueLabel="Cumulative cases"
+    series={covidSeries}
+  >
+    <BackCrumb slot="title-prefix" />
+  </LineChart>
+</ProjectPage>

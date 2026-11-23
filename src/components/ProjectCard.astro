@@ -1,0 +1,29 @@
+---
+// A wide card linking to a project's page: a preview drawing on the left (on
+// screens wider than a phone), then
+// the title, organization and years, and a one-sentence summary. The whole
+// card is one link, so the organization name is colored text, not a link.
+import Employer from './Employer.astro';
+import ProjectThumb from './ProjectThumb.astro';
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<a
+  href={`/projects/${project.slug}`}
+  class="group flex items-center gap-4 rounded-lg border border-ink/10 p-4 hover:border-ink/30 transition-colors"
+>
+  <!-- Preview hidden on phones, where it would squeeze the text. -->
+  <ProjectThumb kind={project.thumb} class="hidden sm:block h-16 w-24 shrink-0 text-ink" />
+  <div class="min-w-0 flex-1">
+    <p class="font-medium">{project.title}</p>
+    <p class="text-sm text-ink/60"><Employer name={project.org} /> · {project.years}</p>
+    <p class="mt-1 text-sm text-ink/80">{project.summary}</p>
+  </div>
+  <span aria-hidden="true" class="text-ink/40 group-hover:text-ink transition-colors">→</span>
+</a>

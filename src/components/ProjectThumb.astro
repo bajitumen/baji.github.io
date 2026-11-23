@@ -1,0 +1,104 @@
+---
+// Small preview drawings of each project's chart, for the project cards.
+// Drawn at build time as plain SVG from the same data and the same colors as
+// the full charts (light and dark versions, switched by the themed-* classes).
+// Decorative only.
+import { gradeProjection } from '../data/simulated-grade-projection';
+import felonyMurderData from '../data/felony-murder-race-by-state.json';
+import { covidSeries } from '../data/covid';
+import { gradeColors, felonyColors } from '../data/chart-colors';
+
+interface Props {
+  kind: 'grade' | 'felony' | 'covid';
+  class?: string;
+}
+
+const { kind, class: className } = Astro.props;
+
+const W = 100;
+const H = 64;
+const PAD = 4;
+
+type Color = { light: string; dark: string };
+const themed = (c: Color) => ({ '--c-light': c.light, '--c-dark': c.dark });
+
+// Scale [x, y] points into the drawing box, y growing upward.
+function scaler(xs: number[], ys: number[], yMin = Math.min(...ys), yMax = Math.max(...ys)) {
+  const xMin = Math.min(...xs);
+  const xMax = Math.max(...xs);
+  return (x: number, y: number) =>
+    [PAD + ((x - xMin) / (xMax - xMin || 1)) * (W - 2 * PAD), H - PAD - ((y - yMin) / (yMax - yMin || 1)) * (H - 2 * PAD)]
+      .map((v) => v.toFixed(1))
+      .join(',');
+}
+const path = (pts: string[]) => `M${pts.join('L')}`;
+
+type Line = { d: string; color: Color; dashed?: boolean };
+type Area = { d: string; color: Color; opacity: number };
+type Bar = { x: number; y: number; w: number; h: number; color: Color };
+let lines: Line[] = [];
+let areas: Area[] = [];
+let bars: Bar[] = [];
+
+if (kind === 'grade') {
+  // Course grade so far (cumulative ÷ share graded), with the projected range:
+  // green between realistic and optimistic, red between realistic and
+  // pessimistic, both at 50% opacity as in the full chart.
+  const c = (key: 'actual' | 'optimistic' | 'pessimistic') => ({ light: gradeColors.light[key], dark: gradeColors.dark[key] });
+  const pts = gradeProjection.filter((p) => p.graded > 0).map((p) => ({ ...p, t: Date.parse(p.date) }));
+  const avg = (v: number | undefined, g: number) => (v === undefined ? undefined : (v / g) * 100);
+  const actual = pts.filter((p) => p.actual !== undefined);
+  const proj = pts.filter((p) => p.p50 !== undefined);
+  const ys = pts.flatMap((p) => [avg(p.actual, p.graded), avg(p.p10, p.graded), avg(p.p90, p.graded)]).filter((v): v is number => v !== undefined);
+  const s = scaler(pts.map((p) => p.t), ys);
+  const at = (key: 'p10' | 'p50' | 'p90', list = proj) => list.map((p) => s(p.t, avg(p[key], p.graded)!));
+  areas.push({ d: path([...at('p90'), ...at('p50').reverse()]) + 'Z', color: c('optimistic'), opacity: 0.5 });
+  areas.push({ d: path([...at('p50'), ...at('p10').reverse()]) + 'Z', color: c('pessimistic'), opacity: 0.5 });
+  lines.push({ d: path(at('p90')), color: c('optimistic'), dashed: true });
+  lines.push({ d: path(at('p10')), color: c('pessimistic'), dashed: true });
+  lines.push({ d: path(at('p50')), color: c('actual'), dashed: true });
+  lines.push({ d: path(actual.map((p) => s(p.t, avg(p.actual, p.graded)!))), color: c('actual') });
+} else if (kind === 'covid') {
+  // The three cumulative case lines in their chart colors, every 4th point
+  // (plenty at this size).
+  const all = covidSeries.flatMap((se) => se.points.map((p) => ({ t: Date.parse(p.date), v: p.value })));
+  const s = scaler(all.map((p) => p.t), all.map((p) => p.v), 0);
+  lines = covidSeries.map((se) => ({
+    d: path(se.points.filter((_, j) => j % 4 === 0 || j === se.points.length - 1).map((p) => s(Date.parse(p.date), p.value))),
+    color: { light: se.color, dark: se.colorDark ?? se.color },
+  }));
+} else {
+  // Split bars: the White part (1) and the Black part (the ratio), with a
+  // 1-unit gap between them as in the full chart.
+  const base = { light: felonyColors.light.base, dark: felonyColors.dark.base };
+  const compare = { light: felonyColors.light.compare, dark: felonyColors.dark.compare };
+  const step = (H - 2 * PAD) / felonyMurderData.length;
+  const h = step * 0.6;
+  const width = W - 2 * PAD;
+  bars = felonyMurderData.flatMap((r, i) => {
+    const split = width / (1 + r.ratio);
+    const y = PAD + i * step;
+    return [
+      { x: PAD, y, w: split, h, color: base },
+      { x: PAD + split + 1, y, w: width - split - 1, h, color: compare },
+    ];
+  });
+}
+---
+
+<svg class={className} viewBox={`0 0 ${W} ${H}`} fill="none" aria-hidden="true" preserveAspectRatio="none">
+  {areas.map((a) => <path d={a.d} class="themed-fill" style={themed(a.color)} fill-opacity={a.opacity} />)}
+  {lines.map((l) => (
+    <path
+      d={l.d}
+      class="themed-stroke"
+      style={themed(l.color)}
+      stroke-width="1.5"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+      stroke-dasharray={l.dashed ? '3 2' : undefined}
+      vector-effect="non-scaling-stroke"
+    />
+  ))}
+  {bars.map((b) => <rect x={b.x} y={b.y} width={b.w} height={b.h} class="themed-fill" style={themed(b.color)} />)}
+</svg>

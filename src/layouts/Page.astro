@@ -1,0 +1,32 @@
+---
+// The site's page frame, shared by the home page and every project page: the
+// centered content column with the header, intro paragraph and section tabs,
+// followed by the page's own content.
+import Base from './Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Intro from '../components/Intro.astro';
+import SiteNav, { type Section } from '../components/SiteNav.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  home?: boolean; // true on the home page (tabs switch in place)
+  current?: Section; // on other pages, the section to underline
+}
+
+const { title, description, home = false, current } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <main class="min-h-screen flex items-start justify-center px-6 pt-24 md:pt-40 pb-24">
+    <div class="w-full max-w-2xl text-base text-ink leading-relaxed">
+      <SiteHeader home={home} />
+      <Intro />
+      <SiteNav home={home} current={current} />
+      <div class="mt-8">
+        <slot />
+      </div>
+    </div>
+  </main>
+  <slot name="after" />
+</Base>
