@@ -1,12 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- Placeholder favicon: a dark badge with the face of Phosphor's "smiley"
-       (regular weight, MIT license, phosphoricons.com), outer ring removed.
-       The badge carries its own contrast, so it reads on light and dark tabs. -->
-  <circle cx="128" cy="128" r="128" fill="#0D0F10"/>
+  <!-- Favicon: a light badge with a black ring, showing the face of Phosphor's
+       "smiley" (regular weight, MIT license, phosphoricons.com) wearing the
+       same round glasses as the header smiley. The ring keeps the badge's
+       edge visible on light tabs; the light face stands out on dark ones. -->
+  <circle cx="128" cy="128" r="120" fill="#F2F0EF" stroke="#0D0F10" stroke-width="16"/>
   <!-- Eyes and mouth, enlarged 125% around the center for small sizes -->
-  <g fill="#F2F0EF" transform="translate(128 128) scale(1.25) translate(-128 -128)">
+  <g fill="#0D0F10" transform="translate(128 128) scale(1.25) translate(-128 -128)">
     <path d="M80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Z"/>
     <path d="M176,108a12,12,0,1,1-12-12A12,12,0,0,1,176,108Z"/>
     <path d="M174.93,156c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"/>
+  </g>
+  <!-- Round glasses (lenses, bridge, arms), at the same scale, a bit bolder -->
+  <g fill="none" stroke="#0D0F10" stroke-width="10" stroke-linecap="round" transform="translate(128 128) scale(1.25) translate(-128 -128)">
+    <circle cx="92" cy="108" r="24"/>
+    <circle cx="164" cy="108" r="24"/>
+    <path d="M116,105 Q128,97 140,105"/>
+    <path d="M68,104 L44,100"/>
+    <path d="M188,104 L212,100"/>
   </g>
 </svg>

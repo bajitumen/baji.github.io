@@ -1,0 +1,119 @@
+---
+// The header smiley: Phosphor's smiley face (MIT) wearing round glasses.
+// Awake in light mode, asleep in dark mode. When the theme switches, its
+// features reshape themselves: the dot eyes stretch and bend into closed
+// arches (curving downward), and the smile curls up into a small round "o".
+// Switching to dark also floats a little "z z" up and away. A page that loads
+// in either mode just shows that face, without animating.
+//
+// Each moving feature is one path with the same set of points in both states
+// (data-d-light / data-d-dark) plus a line width for each (data-w-light /
+// data-w-dark); scripts/smiley.ts moves the points between them. The eyes are
+// short lines with round ends: very short and thick, they look like dots.
+// The smile is split into four curves to line up with the four-curve "o",
+// which is drawn with a thick line so it reads as a filled circle.
+
+const features = [
+  { light: 'M91.9,108 Q92,108 92.1,108', dark: 'M81,112 Q92,100 103,112', wLight: 24, wDark: 10 },
+  { light: 'M163.9,108 Q164,108 164.1,108', dark: 'M153,112 Q164,100 175,112', wLight: 24, wDark: 10 },
+  { light: 'M84.0,152.0 C87.5,160.0 93.9,166.0 101.7,170.0 C109.5,174.0 118.8,176.0 128.0,176.0 C137.2,176.0 146.5,174.0 154.3,170.0 C162.1,166.0 168.5,160.0 172.0,152.0', dark: 'M122,166 C122,169.3 124.7,172 128,172 C131.3,172 134,169.3 134,166 C134,162.7 131.3,160 128,160 C124.7,160 122,162.7 122,166', wLight: 16, wDark: 18 },
+];
+
+// Round glasses: two lenses around the eyes, a curved bridge, short arms.
+const glasses = [
+  'M68,108 a24,24 0 1 0 48,0 a24,24 0 1 0 -48,0',
+  'M140,108 a24,24 0 1 0 48,0 a24,24 0 1 0 -48,0',
+  'M116,105 Q128,97 140,105',
+  'M68,104 L44,100',
+  'M188,104 L212,100',
+];
+---
+
+<span class="smiley relative inline-flex h-full">
+  <svg class="h-full w-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+    <circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-width="16" />
+    <g fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round">
+      {glasses.map((d) => <path d={d} />)}
+    </g>
+    {features.map((f) => (
+      <path
+        class="smiley-feature"
+        d={f.light}
+        stroke-width={f.wLight}
+        data-d-light={f.light}
+        data-d-dark={f.dark}
+        data-w-light={f.wLight}
+        data-w-dark={f.wDark}
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    ))}
+  </svg>
+  <span class="smiley-z" aria-hidden="true"><span>z</span><span>z</span></span>
+</span>
+<!-- Show the right face before the page first paints. (On page swaps,
+     scripts/navigation.ts does this for the incoming page.) -->
+<script is:inline data-astro-rerun>
+  (() => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    for (const el of document.querySelectorAll('.smiley-feature')) {
+      el.setAttribute('d', dark ? el.dataset.dDark : el.dataset.dLight);
+      el.setAttribute('stroke-width', dark ? el.dataset.wDark : el.dataset.wLight);
+    }
+  })();
+</script>
+
+<style is:global>
+  /* "z z": hidden until the theme switches to dark (smiley-sleep class). */
+  .smiley-z {
+    position: absolute;
+    top: -0.35em;
+    right: -0.55em;
+    display: flex;
+    gap: 0.05em;
+    font-size: 0.8rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .smiley-z span {
+    opacity: 0;
+  }
+  .smiley-sleep .smiley-z span {
+    animation: smiley-z 1.4s ease-out forwards;
+  }
+  .smiley-sleep .smiley-z span + span {
+    font-size: 0.75em;
+    animation-delay: 0.25s;
+  }
+  @keyframes smiley-z {
+    0% { opacity: 0; transform: translate(0, 0.3em); }
+    25% { opacity: 0.8; }
+    100% { opacity: 0; transform: translate(0.4em, -0.9em); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .smiley-sleep .smiley-z span {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { animateSmiley } from '../scripts/smiley';
+  import { currentTheme, onThemeChange } from '../scripts/theme';
+
+  // Runs once; the smiley is replaced on page swaps, so look it up each time.
+  onThemeChange(() => {
+    const smiley = document.querySelector<HTMLElement>('.smiley');
+    if (!smiley) return;
+    const dark = currentTheme() === 'dark';
+    animateSmiley(smiley, dark);
+    // Float the "z z" when falling asleep (restarting it if it played before).
+    smiley.classList.remove('smiley-sleep');
+    if (dark) {
+      void smiley.offsetWidth;
+      smiley.classList.add('smiley-sleep');
+    }
+  });
+</script>

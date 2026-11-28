@@ -2,6 +2,7 @@
 // so the page never jumps: every navigation keeps the scroll position, and
 // Back/Forward restore where you were. Loaded once by Base.astro; these
 // listeners stay active across navigations.
+import { setSmileyIn } from './smiley';
 
 // Scroll position to keep for the current navigation. Back/Forward
 // ("traverse") are left to the router, which restores the saved position.
@@ -16,6 +17,8 @@ document.addEventListener('astro:before-swap', (e) => {
   // The router copies the new page's <html> attributes, which would drop the
   // theme; carry the current one over so the page never flashes.
   doc.documentElement.dataset.theme = document.documentElement.dataset.theme;
+  // Likewise give the incoming page's smiley the right face before it shows.
+  setSmileyIn(doc, document.documentElement.dataset.theme === 'dark');
   // Show the tab named in the address (e.g. /#projects) before the new page
   // appears, so a restored scroll position isn't cut short by a shorter tab.
   selectTabIn(doc, e.to.hash.slice(1));

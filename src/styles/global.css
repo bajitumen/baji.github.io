@@ -23,7 +23,8 @@
 
 /* While the theme switches, turn off color animations (like the tabs' hover
    fade) so everything changes at once instead of some elements fading
-   through in-between colors. ThemeToggle adds and removes this class. */
+   through in-between colors. ThemeToggle adds and removes this class. (The
+   smiley's own animation is script-driven, so it isn't affected.) */
 .theme-switching,
 .theme-switching * {
   transition: none !important;

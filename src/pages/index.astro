@@ -22,14 +22,21 @@ import { projects } from '../data/projects';
       Homelessness Policy Research Institute, a researcher at
       <Employer name="RAND" href="https://www.rand.org/" />, and a data scientist for the <Employer name="UCLA" href="https://uclaprisondata.org/" /> Behind Bars Data Project.
     </p>
+    <p>
+      I graduated from <Employer name="Yale University" href="https://isps.yale.edu/news/2023-02-10-data-service-a-former-isps-scholar-applies-science-for-the-public-good" /> with
+      degrees in Economics and Ethnicity, Race, and Migration, where I was a Dahl Research Scholar.
+    </p>
   </div>
 
   <div id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" class="hidden space-y-4">
     {projects.map((project) => <ProjectCard project={project} />)}
   </div>
 
-  <div id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" class="hidden">
+  <div id="panel-links" role="tabpanel" aria-labelledby="tab-links" class="hidden">
     <ul class="space-y-2">
+      <li>
+        <a href="mailto:tumendemberelbaji@gmail.com" class="underline underline-offset-4 decoration-ink/30 hover:decoration-ink">Email</a>
+      </li>
       <li>
         <a href="https://www.linkedin.com/in/baji-tumendemberel-93a0b4121/" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-ink/30 hover:decoration-ink">LinkedIn</a>
       </li>
@@ -89,8 +96,12 @@ import { projects } from '../data/projects';
         });
       }
 
-      // Open the tab named in the URL, e.g. bajitumen.com/#contact
-      const fromHash = tabs.find((t) => t.dataset.tab === location.hash.slice(1));
+      // The tab named in the URL. "#contact" is the old name of the links
+      // tab, so older shared addresses still open it.
+      const tabName = (hash) => (hash === 'contact' ? 'links' : hash);
+
+      // Open the tab named in the URL, e.g. bajitumen.com/#links
+      const fromHash = tabs.find((t) => t.dataset.tab === tabName(location.hash.slice(1)));
       if (fromHash) select(fromHash, false);
 
       // Follow later changes to the URL's #tab (e.g. an in-page #link). The
@@ -99,7 +110,7 @@ import { projects } from '../data/projects';
       if (!window.__tabsFollowHash) {
         window.__tabsFollowHash = true;
         window.addEventListener('hashchange', () => {
-          const name = location.hash.slice(1);
+          const name = tabName(location.hash.slice(1));
           const current = Array.from(document.querySelectorAll('[role="tab"]'));
           const match = current.find((t) => t.dataset.tab === name);
           if (!match) return;

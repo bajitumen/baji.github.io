@@ -1,10 +1,10 @@
 ---
-// The about / projects / contact row on every page.
+// The about / projects / links row on every page.
 // On the home page these are real tabs that switch the panels in place (the
 // tab script in index.astro drives them). On other pages they are ordinary
 // links to those tabs on the home page, styled the same, with the current
 // section underlined.
-export const sections = ['about', 'projects', 'contact'] as const;
+export const sections = ['about', 'projects', 'links'] as const;
 export type Section = (typeof sections)[number];
 
 interface Props {
